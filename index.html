@@ -1620,8 +1620,8 @@ function switchAuthTab(tab) {
 // במקום המימוש הקיים עם signInWithPopup:
 async function handleGoogleLogin() {
   try {
-    const { auth, googleProvider, signInWithRedirect } = window._fb;
-    await signInWithRedirect(auth, googleProvider);
+    const { auth, googleProvider, signInWithPopup } = window._fb;
+    await signInWithPopup(auth, googleProvider);
   } catch (error) {
     showToast("שגיאה בהתחברות עם גוגל", "error");
   }
