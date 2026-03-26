@@ -475,6 +475,20 @@ label{
 .sidebar-link-icon{width:20px;text-align:center;font-size:16px;flex-shrink:0;}
 .sidebar-bottom{padding:16px 12px 0;border-top:1px solid var(--border);}
 
+.dashboard-bottom-nav{
+  position:fixed;bottom:14px;right:50%;transform:translateX(50%);
+  z-index:1200;display:flex;gap:8px;padding:10px;border-radius:14px;
+  background:rgba(4,6,15,0.88);border:1px solid var(--border);
+  box-shadow:0 14px 40px rgba(0,0,0,0.4);backdrop-filter:blur(10px);
+}
+.bottom-nav-btn{
+  min-width:110px;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04);color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s;
+}
+.bottom-nav-btn:hover{color:var(--text);background:rgba(255,255,255,0.08);}
+.bottom-nav-btn.active{color:var(--cyan);border-color:rgba(0,212,255,0.28);background:rgba(0,212,255,0.08);}
+
 /* Main content */
 .dashboard-main{flex:1;padding:32px;min-width:0;}
 .dash-header{margin-bottom:32px;}
@@ -782,6 +796,30 @@ label{
 .modal-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
 .modal-btns{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
 
+/* Play modal */
+.play-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;}
+.play-side{border:1px solid var(--border);border-radius:10px;padding:14px;background:rgba(255,255,255,0.03);}
+.play-main{border:1px solid var(--border);border-radius:10px;padding:16px;background:rgba(255,255,255,0.03);}
+.play-kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.play-kpi-item{border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px;text-align:center;}
+.play-kpi-val{font-family:var(--font-display);font-size:18px;color:var(--cyan);}
+.play-kpi-lbl{font-size:11px;color:var(--muted);}
+.play-progress{height:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,0.08);margin-top:8px;}
+.play-progress-fill{height:100%;width:0%;transition:width .3s;background:linear-gradient(90deg,var(--cyan),var(--purple));}
+.play-answers{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.play-answer-btn{
+  width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.04);
+  color:var(--text);text-align:right;padding:11px 12px;cursor:pointer;
+}
+.play-answer-btn:hover{background:rgba(255,255,255,0.08);}
+.play-map-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+.play-map-node{
+  aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,0.04);
+}
+.play-map-node.done{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);}
+.play-map-node.curr{background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.4);}
+
 /* ═══════════════════════════════════════════════
    LOADING SCREEN
 ═══════════════════════════════════════════════ */
@@ -824,6 +862,9 @@ label{
   .pricing-grid{grid-template-columns:1fr 1fr;}
   .answer-grid{grid-template-columns:1fr;}
   .slides-panel{display:none;}
+  .dashboard-bottom-nav{left:10px;right:10px;transform:none;bottom:8px;overflow:auto;}
+  .bottom-nav-btn{min-width:unset;flex:1;}
+  .play-layout{grid-template-columns:1fr;}
 }
 
 /* Animated border */
@@ -1377,6 +1418,12 @@ label{
       </div>
     </main>
   </div>
+  <div class="dashboard-bottom-nav" id="dashboard-bottom-nav">
+    <button class="bottom-nav-btn" id="bn-plan" onclick="dashQuickNav('upgrade')">💳 תוכניות</button>
+    <button class="bottom-nav-btn" id="bn-creator" onclick="dashQuickNav('creator')">🧪 יצירה</button>
+    <button class="bottom-nav-btn active" id="bn-home" onclick="dashQuickNav('projects')">🏠 בית</button>
+    <button class="bottom-nav-btn" id="bn-stats" onclick="dashQuickNav('stats')">📊 סטטים</button>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════ -->
@@ -1584,6 +1631,30 @@ label{
   </div>
 </div>
 
+<!-- Play Modal -->
+<div class="modal-overlay" id="modal-play">
+  <div class="modal" style="max-width:980px;">
+    <button class="modal-close" onclick="closePlayModal()">✕</button>
+    <div class="modal-title">🎮 מצב משחק</div>
+    <div class="modal-sub" id="play-subtitle">תצוגה מקדימה אינטראקטיבית</div>
+    <div class="play-layout">
+      <div class="play-side">
+        <div class="play-kpi">
+          <div class="play-kpi-item"><div class="play-kpi-val" id="play-score">0</div><div class="play-kpi-lbl">ניקוד</div></div>
+          <div class="play-kpi-item"><div class="play-kpi-val" id="play-combo">x1.0</div><div class="play-kpi-lbl">קומבו</div></div>
+        </div>
+        <div class="play-kpi">
+          <div class="play-kpi-item"><div class="play-kpi-val" id="play-timer">--</div><div class="play-kpi-lbl">טיימר</div></div>
+          <div class="play-kpi-item"><div class="play-kpi-val" id="play-step">0/0</div><div class="play-kpi-lbl">התקדמות</div></div>
+        </div>
+        <div class="play-progress"><div class="play-progress-fill" id="play-progress-fill"></div></div>
+        <div id="play-side-extra" style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6;"></div>
+      </div>
+      <div class="play-main" id="play-main"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ═══════════════════════════════════════════════
    APP STATE
@@ -1603,9 +1674,16 @@ const AppState = {
   questionToDelete: null,
   settings: { timer: false, combo: false, random: false, shop: false },
   upgradeTarget: null,
+  playState: null,
 };
 
 const PLAN_PRICES = { pro: '$7.99', ultra: '$13.99', business: '$17.99' };
+const PLAN_LIMITS = {
+  free: { projects: 5, questions: 15, participants: 15, effects: 0, ai: 0, modes: ['normal'] },
+  pro: { projects: 10, questions: 25, participants: 40, effects: 5, ai: 2, modes: ['normal', 'timer'] },
+  ultra: { projects: Infinity, questions: Infinity, participants: Infinity, effects: 15, ai: 5, modes: ['normal', 'timer', 'combo'] },
+  business: { projects: Infinity, questions: Infinity, participants: Infinity, effects: 50, ai: Infinity, modes: ['normal', 'timer', 'combo', 'x2', 'shop'] }
+};
 const RANK_THRESHOLDS = [
   { name: 'Noob', min: 0, class: 'rank-noob', icon: '🎮' },
   { name: 'Hacker', min: 1000, class: 'rank-hacker', icon: '💻' },
@@ -1699,6 +1777,15 @@ function updateNavForAuth(user) {
   }
 }
 
+function getCurrentPlan() {
+  const p = AppState.currentUser?.plan || 'free';
+  return PLAN_LIMITS[p] ? p : 'free';
+}
+
+function getPlanLimits() {
+  return PLAN_LIMITS[getCurrentPlan()];
+}
+
 /* ═══════════════════════════════════════════════
    AUTH TAB
 ═══════════════════════════════════════════════ */
@@ -1716,33 +1803,9 @@ function switchAuthTab(tab) {
 // במקום המימוש הקיים עם signInWithPopup:
 async function handleGoogleLogin() {
   try {
-    const { auth, googleProvider, signInWithPopup, signInWithRedirect } = window._fb;
-
-    // Prefer redirect in environments where popups are often blocked or COOP interferes.
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isFile = location.protocol === 'file:';
-    if (isMobile || isFile) {
-      await signInWithRedirect(auth, googleProvider);
-      return;
-    }
-
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (e) {
-      // Fallback to redirect for COOP/popup blockers
-      const code = e?.code || '';
-      const msg = String(e?.message || '');
-      const shouldRedirect =
-        code.includes('popup') ||
-        code.includes('cancelled') ||
-        msg.toLowerCase().includes('cross-origin-opener-policy') ||
-        msg.toLowerCase().includes('window.closed');
-      if (shouldRedirect) {
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-      throw e;
-    }
+    const { auth, googleProvider, signInWithRedirect } = window._fb;
+    // Redirect-only flow avoids COOP popup warnings.
+    await signInWithRedirect(auth, googleProvider);
   } catch (error) {
     showToast("שגיאה בהתחברות עם גוגל", "error");
   }
@@ -1914,6 +1977,7 @@ function populateSidebar(user) {
   document.getElementById('profile-rank-badge').innerHTML = `<span class="rank-badge ${rank.class}">${rank.icon} ${rank.name}</span>`;
   document.getElementById('profile-display-name').value = name;
   document.getElementById('profile-username').value = user.username || '';
+  updateBottomNavActive('projects');
 }
 
 function getRank(xp) {
@@ -1935,6 +1999,31 @@ function showDashTab(tab) {
   const link = document.getElementById('tab-' + tab);
   if (link) link.classList.add('active');
   showPage('dashboard');
+  updateBottomNavActive(tab);
+}
+
+function dashQuickNav(target) {
+  if (target === 'creator') {
+    if (AppState.currentProject) {
+      routeToCreatorByProjectType(AppState.currentProject.type || 'quiz');
+    } else {
+      openNewProjectModal();
+    }
+    updateBottomNavActive('creator');
+    return;
+  }
+  showDashTab(target);
+}
+
+function updateBottomNavActive(tab) {
+  const map = { projects: 'bn-home', stats: 'bn-stats', upgrade: 'bn-plan', creator: 'bn-creator' };
+  ['bn-home','bn-stats','bn-plan','bn-creator'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.classList.remove('active');
+  });
+  const id = map[tab] || 'bn-home';
+  const btn = document.getElementById(id);
+  if (btn) btn.classList.add('active');
 }
 
 /* ═══════════════════════════════════════════════
@@ -1991,6 +2080,12 @@ function openNewProjectModal() {
 }
 
 async function startCreateProject(type) {
+  const limits = getPlanLimits();
+  if (AppState.projects.length >= limits.projects) {
+    showToast(`הגעת למגבלת הפרויקטים (${limits.projects}) בחבילה שלך`, 'error');
+    showDashTab('upgrade');
+    return;
+  }
   closeModal('modal-new-project');
   const name = type === 'escape' ? 'חדר בריחה חדש' : 'חידון חדש';
   AppState.currentProject = { type, name, questions: [], settings: {}, theme: 'cyber' };
@@ -2007,6 +2102,7 @@ async function startCreateProject(type) {
     renderEscapeMapEditor();
     renderEscapeSlidesPanel();
   }
+  enforceCreatorPlanUI();
   routeToCreatorByProjectType(type);
 }
 
@@ -2025,6 +2121,7 @@ function openProject(proj) {
     renderEscapeMapEditor();
     renderEscapeSlidesPanel();
   }
+  enforceCreatorPlanUI();
   routeToCreatorByProjectType(proj.type || 'quiz');
 }
 
@@ -2066,6 +2163,11 @@ async function saveProject() {
    QUESTION EDITOR
 ═══════════════════════════════════════════════ */
 function addQuestion(type) {
+  const limits = getPlanLimits();
+  if (AppState.questions.length >= limits.questions) {
+    showToast(`מקסימום שאלות לחבילה שלך: ${limits.questions}`, 'error');
+    return;
+  }
   const q = createDefaultQuestion(type);
   AppState.questions.push(q);
   renderEditorCanvas();
@@ -2250,14 +2352,169 @@ function scrollToQuestion(idx) {
 }
 
 function previewProject() {
-  // Minimal preview now: for quiz we just validate; for escape we validate nodes.
   const type = document.getElementById('project-type')?.value || AppState.currentProject?.type || 'quiz';
-  if (type === 'escape') {
-    const filled = (AppState.escapeNodes || []).filter(n => n.filled).length;
-    showToast(`תצוגה מקדימה (דמו) – יש ${filled} משימות במפה.`, 'info');
-  } else {
-    showToast(`תצוגה מקדימה (דמו) – יש ${AppState.questions.length} שאלות.`, 'info');
+  openPlayModal(type);
+}
+
+function openPlayModal(type) {
+  if (type === 'escape') initEscapePlay();
+  else initQuizPlay();
+  openModal('modal-play');
+}
+
+function closePlayModal() {
+  const st = AppState.playState;
+  if (st?.timerHandle) clearInterval(st.timerHandle);
+  AppState.playState = null;
+  closeModal('modal-play');
+}
+
+function initQuizPlay() {
+  const questions = (AppState.questions || []).filter(q => q.text);
+  if (!questions.length) {
+    showToast('אין שאלות להצגה', 'error');
+    return;
   }
+  AppState.playState = { type: 'quiz', idx: 0, score: 0, combo: 1, timer: 20, timerHandle: null, questions };
+  document.getElementById('play-subtitle').textContent = 'חידון - משחק חי';
+  renderQuizStep();
+}
+
+function renderQuizStep() {
+  const st = AppState.playState;
+  if (!st || st.type !== 'quiz') return;
+  const q = st.questions[st.idx];
+  const playMain = document.getElementById('play-main');
+  if (!q || !playMain) return;
+  const total = st.questions.length;
+  document.getElementById('play-step').textContent = `${st.idx + 1}/${total}`;
+  document.getElementById('play-score').textContent = Math.floor(st.score);
+  document.getElementById('play-combo').textContent = `x${st.combo.toFixed(1)}`;
+  document.getElementById('play-progress-fill').style.width = `${(st.idx / total) * 100}%`;
+  document.getElementById('play-side-extra').textContent = 'ענו נכון כדי להגדיל קומבו וניקוד.';
+  if (st.timerHandle) clearInterval(st.timerHandle);
+  st.timer = AppState.settings.timer ? 20 : null;
+  document.getElementById('play-timer').textContent = st.timer === null ? '∞' : st.timer;
+  if (st.timer !== null) {
+    st.timerHandle = setInterval(() => {
+      st.timer -= 1;
+      document.getElementById('play-timer').textContent = st.timer;
+      if (st.timer <= 0) {
+        clearInterval(st.timerHandle);
+        st.combo = 1;
+        nextQuizStep();
+      }
+    }, 1000);
+  }
+  let answersHtml = '';
+  if (q.type === 'american') {
+    answersHtml = `<div class="play-answers">${(q.options || []).map((opt, i) => `<button class="play-answer-btn" onclick="answerQuizAmerican(${i})">${escapeHtml(opt || `אפשרות ${i + 1}`)}</button>`).join('')}</div>`;
+  } else if (q.type === 'truefalse') {
+    answersHtml = `<div class="play-answers"><button class="play-answer-btn" onclick="answerQuizTrueFalse(true)">✅ נכון</button><button class="play-answer-btn" onclick="answerQuizTrueFalse(false)">❌ לא נכון</button></div>`;
+  } else if (q.type === 'typing') {
+    answersHtml = `<div class="play-answers"><input id="play-typing-answer" placeholder="הקלד תשובה..." /><button class="btn btn-primary" onclick="answerQuizTyping()">שלח תשובה</button></div>`;
+  } else {
+    answersHtml = `<div class="play-answers"><button class="btn btn-primary" onclick="answerQuizOrder(true)">סימנתי נכון</button><button class="btn btn-outline" onclick="answerQuizOrder(false)">סימנתי לא נכון</button></div>`;
+  }
+  playMain.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">שאלה ${st.idx + 1}</div><h3 style="font-size:22px;line-height:1.4;margin-bottom:8px;">${escapeHtml(q.text || 'ללא טקסט')}</h3>${answersHtml}`;
+}
+
+function applyQuizScore(correct, points = 100) {
+  const st = AppState.playState;
+  if (!st) return;
+  if (correct) {
+    if (AppState.settings.combo) st.combo = Math.min(2, st.combo + 0.1);
+    st.score += points * st.combo;
+  } else {
+    st.combo = 1;
+  }
+  document.getElementById('play-score').textContent = Math.floor(st.score);
+  document.getElementById('play-combo').textContent = `x${st.combo.toFixed(1)}`;
+}
+function answerQuizAmerican(i) { const st = AppState.playState; if (!st) return; const q = st.questions[st.idx]; applyQuizScore(i === q.correctIndex, q.points || 100); nextQuizStep(); }
+function answerQuizTrueFalse(v) { const st = AppState.playState; if (!st) return; const q = st.questions[st.idx]; applyQuizScore(v === !!q.correct, q.points || 100); nextQuizStep(); }
+function answerQuizTyping() { const st = AppState.playState; if (!st) return; const q = st.questions[st.idx]; const val = (document.getElementById('play-typing-answer')?.value || '').trim().toLowerCase(); const ans = (q.answer || '').trim().toLowerCase(); applyQuizScore(!!val && val === ans, q.points || 100); nextQuizStep(); }
+function answerQuizOrder(v) { applyQuizScore(v, 120); nextQuizStep(); }
+
+function nextQuizStep() {
+  const st = AppState.playState;
+  if (!st) return;
+  if (st.timerHandle) clearInterval(st.timerHandle);
+  st.idx += 1;
+  if (st.idx >= st.questions.length) return finishQuizPlay();
+  renderQuizStep();
+}
+
+function finishQuizPlay() {
+  const st = AppState.playState;
+  const playMain = document.getElementById('play-main');
+  document.getElementById('play-progress-fill').style.width = '100%';
+  document.getElementById('play-step').textContent = `${st.questions.length}/${st.questions.length}`;
+  document.getElementById('play-side-extra').textContent = 'סיום משחק! בעתיד אפשר לשמור תוצאה בלוח דירוג.';
+  if (playMain) playMain.innerHTML = `<h3 style="font-size:24px;">🏁 סיימת את החידון</h3><p style="color:var(--muted);margin:8px 0 16px;">ניקוד סופי: <b>${Math.floor(st.score)}</b></p><button class="btn btn-primary" onclick="initQuizPlay()">שחק שוב</button>`;
+}
+
+function initEscapePlay() {
+  const nodes = (AppState.escapeNodes || []).filter(n => n.filled && n.code && n.text);
+  if (!nodes.length) {
+    showToast('אין משימות חדר בריחה מלאות להצגה', 'error');
+    return;
+  }
+  AppState.playState = { type: 'escape', nodes, idx: 0, score: 0 };
+  document.getElementById('play-subtitle').textContent = 'חדר בריחה - משחק חי';
+  renderEscapePlayStep();
+}
+
+function renderEscapePlayStep() {
+  const st = AppState.playState;
+  if (!st || st.type !== 'escape') return;
+  const node = st.nodes[st.idx];
+  const total = st.nodes.length;
+  const playMain = document.getElementById('play-main');
+  if (!node || !playMain) return;
+  document.getElementById('play-step').textContent = `${st.idx + 1}/${total}`;
+  document.getElementById('play-score').textContent = Math.floor(st.score);
+  document.getElementById('play-combo').textContent = 'x1.0';
+  document.getElementById('play-timer').textContent = AppState.settings.timer ? '20' : '∞';
+  document.getElementById('play-progress-fill').style.width = `${(st.idx / total) * 100}%`;
+  document.getElementById('play-side-extra').textContent = 'הכנס קוד סודי כדי לפתוח את החדר הבא.';
+  const map = st.nodes.map((n, i) => `<div class="play-map-node ${i < st.idx ? 'done' : i === st.idx ? 'curr' : ''}">${n.icon || '🧩'}</div>`).join('');
+  playMain.innerHTML = `<div class="play-map-grid">${map}</div><h3 style="font-size:22px;line-height:1.4;margin:14px 0 8px;">${escapeHtml(node.text)}</h3><input id="play-escape-code" dir="ltr" placeholder="הקלד קוד סודי..." /><div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-primary" onclick="answerEscapeCode()">פתח דלת</button><button class="btn btn-outline" onclick="showEscapeHint('small')">רמז קטן</button><button class="btn btn-outline" onclick="showEscapeHint('large')">רמז גדול</button></div><div id="play-escape-hint" style="margin-top:10px;color:var(--muted);font-size:12px;"></div>`;
+}
+
+function showEscapeHint(type) {
+  const st = AppState.playState;
+  if (!st || st.type !== 'escape') return;
+  const node = st.nodes[st.idx];
+  const el = document.getElementById('play-escape-hint');
+  if (!el) return;
+  el.textContent = type === 'small' ? (node.hintSmall || 'אין רמז קטן') : (node.hintLarge || 'אין רמז גדול');
+}
+
+function answerEscapeCode() {
+  const st = AppState.playState;
+  if (!st || st.type !== 'escape') return;
+  const node = st.nodes[st.idx];
+  const val = (document.getElementById('play-escape-code')?.value || '').trim().toLowerCase();
+  const target = (node.code || '').trim().toLowerCase();
+  if (!val) return;
+  if (val === target) {
+    st.score += 250;
+    st.idx += 1;
+    if (st.idx >= st.nodes.length) return finishEscapePlay();
+    renderEscapePlayStep();
+  } else {
+    showToast('קוד שגוי', 'error');
+  }
+}
+
+function finishEscapePlay() {
+  const st = AppState.playState;
+  const playMain = document.getElementById('play-main');
+  document.getElementById('play-progress-fill').style.width = '100%';
+  document.getElementById('play-step').textContent = `${st.nodes.length}/${st.nodes.length}`;
+  document.getElementById('play-score').textContent = Math.floor(st.score);
+  if (playMain) playMain.innerHTML = `<h3 style="font-size:24px;">🗝️ ברחת בהצלחה!</h3><p style="color:var(--muted);margin:8px 0 16px;">ניקוד סופי: <b>${Math.floor(st.score)}</b></p><button class="btn btn-primary" onclick="initEscapePlay()">שחק שוב</button>`;
 }
 
 /* ═══════════════════════════════════════════════
@@ -2382,9 +2639,34 @@ function escapeClearNode() {
    SETTINGS TOGGLES
 ═══════════════════════════════════════════════ */
 function toggleSetting(key) {
+  const limits = getPlanLimits();
+  const allowed =
+    (key === 'timer' && limits.modes.includes('timer')) ||
+    (key === 'combo' && limits.modes.includes('combo')) ||
+    (key === 'random' && limits.modes.includes('x2')) ||
+    (key === 'shop' && limits.modes.includes('shop')) ||
+    (key !== 'timer' && key !== 'combo' && key !== 'random' && key !== 'shop');
+  if (!allowed) {
+    showToast('המצב הזה זמין בחבילה מתקדמת יותר', 'error');
+    return;
+  }
   AppState.settings[key] = !AppState.settings[key];
   const el = document.getElementById('toggle-' + key);
   if (el) el.classList.toggle('on', AppState.settings[key]);
+}
+
+function enforceCreatorPlanUI() {
+  const limits = getPlanLimits();
+  const map = { timer: 'timer', combo: 'combo', random: 'x2', shop: 'shop' };
+  Object.entries(map).forEach(([key, mode]) => {
+    const el = document.getElementById('toggle-' + key);
+    if (!el) return;
+    const allowed = limits.modes.includes(mode);
+    el.style.opacity = allowed ? '1' : '0.35';
+    el.style.pointerEvents = allowed ? 'auto' : 'none';
+    if (!allowed) AppState.settings[key] = false;
+    el.classList.toggle('on', !!AppState.settings[key]);
+  });
 }
 
 /* ═══════════════════════════════════════════════
@@ -2434,7 +2716,22 @@ function upgradePlan(plan) {
 }
 
 async function processUpgrade() {
-  showToast('🚧 מערכת התשלומים בפיתוח – בקרוב!', 'info');
+  if (!AppState.currentUser || !AppState.upgradeTarget) {
+    closeModal('modal-upgrade');
+    return;
+  }
+  const { db, doc, updateDoc, serverTimestamp } = window._fb;
+  try {
+    await updateDoc(doc(db, 'users', AppState.currentUser.uid), {
+      plan: AppState.upgradeTarget,
+      upgradedAt: serverTimestamp()
+    });
+    AppState.currentUser.plan = AppState.upgradeTarget;
+    showToast(`החשבון שודרג ל-${AppState.upgradeTarget.toUpperCase()} ✅`, 'success');
+    enforceCreatorPlanUI();
+  } catch (e) {
+    showToast('שגיאה בשדרוג: ' + (e?.message || 'לא ידוע'), 'error');
+  }
   closeModal('modal-upgrade');
 }
 
