@@ -1617,30 +1617,13 @@ function switchAuthTab(tab) {
 /* ═══════════════════════════════════════════════
    AUTH: GOOGLE
 ═══════════════════════════════════════════════ */
+// במקום המימוש הקיים עם signInWithPopup:
 async function handleGoogleLogin() {
-  const { auth, googleProvider, signInWithPopup, db, doc, setDoc, getDoc } = window._fb;
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    // Create/update user doc
-    const userRef = doc(db, 'users', user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) {
-      await setDoc(userRef, {
-        displayName: user.displayName || 'EscapeIQ User',
-        email: user.email,
-        username: user.email.split('@')[0],
-        plan: 'free',
-        xp: 0,
-        streak: 0,
-        createdAt: new Date().toISOString(),
-        projectCount: 0,
-      });
-    }
-    showToast('ברוך הבא! 🎮', 'success');
-    showPage('dashboard');
-  } catch (e) {
-    showToast('שגיאת כניסה: ' + (e.message || e.code), 'error');
+    const { auth, googleProvider, signInWithRedirect } = window._fb;
+    await signInWithRedirect(auth, googleProvider);
+  } catch (error) {
+    showToast("שגיאה בהתחברות עם גוגל", "error");
   }
 }
 
