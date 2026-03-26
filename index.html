@@ -9,7 +9,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, sendPasswordResetEmail }
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut, onAuthStateChanged, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -36,7 +36,7 @@
   const EMAILJS_PUBLIC = "BOlMG6D8gQQJjLiyJ";
 
   window._fb = { auth, db, googleProvider, signOut, createUserWithEmailAndPassword,
-    signInWithEmailAndPassword, signInWithPopup, onAuthStateChanged, sendPasswordResetEmail,
+    signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, sendPasswordResetEmail,
     doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp };
 
   // Auth state
@@ -1629,6 +1629,10 @@ window.addEventListener('load', () => {
   initOTPInputs();
   spawnParticles();
 
+  // If Google sign-in used redirect flow, finish it here.
+  // This avoids COOP popup issues on some hosts/browsers.
+  handleGoogleRedirectResult();
+
   window._onAuthReady = (user) => {
     AppState.currentUser = user;
     updateNavForAuth(user);
@@ -1638,6 +1642,23 @@ window.addEventListener('load', () => {
     }
   };
 });
+
+async function handleGoogleRedirectResult() {
+  try {
+    const { auth, getRedirectResult } = window._fb || {};
+    if (!auth || !getRedirectResult) return;
+    const res = await getRedirectResult(auth);
+    if (res?.user) {
+      showToast('התחברת עם Google ✅', 'success');
+      showPage('dashboard');
+    }
+  } catch (e) {
+    // Ignore "no redirect" case, toast only meaningful failures
+    if (e?.code && e.code !== 'auth/no-auth-event') {
+      showToast('שגיאה בהתחברות עם Google: ' + (e?.message || 'לא ידוע'), 'error');
+    }
+  }
+}
 
 /* ═══════════════════════════════════════════════
    NAVIGATION
@@ -1695,8 +1716,33 @@ function switchAuthTab(tab) {
 // במקום המימוש הקיים עם signInWithPopup:
 async function handleGoogleLogin() {
   try {
-    const { auth, googleProvider, signInWithPopup } = window._fb;
-    await signInWithPopup(auth, googleProvider);
+    const { auth, googleProvider, signInWithPopup, signInWithRedirect } = window._fb;
+
+    // Prefer redirect in environments where popups are often blocked or COOP interferes.
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isFile = location.protocol === 'file:';
+    if (isMobile || isFile) {
+      await signInWithRedirect(auth, googleProvider);
+      return;
+    }
+
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (e) {
+      // Fallback to redirect for COOP/popup blockers
+      const code = e?.code || '';
+      const msg = String(e?.message || '');
+      const shouldRedirect =
+        code.includes('popup') ||
+        code.includes('cancelled') ||
+        msg.toLowerCase().includes('cross-origin-opener-policy') ||
+        msg.toLowerCase().includes('window.closed');
+      if (shouldRedirect) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+      throw e;
+    }
   } catch (error) {
     showToast("שגיאה בהתחברות עם גוגל", "error");
   }
@@ -1716,9 +1762,11 @@ async function handleEmailLogin() {
     showPage('dashboard');
   } catch (e) {
     const msg = e.code === 'auth/wrong-password' ? 'סיסמה שגויה'
+      : e.code === 'auth/invalid-credential' ? 'אימייל או סיסמה שגויים'
       : e.code === 'auth/user-not-found' ? 'משתמש לא נמצא'
       : e.code === 'auth/invalid-email' ? 'אימייל לא תקין'
-      : 'שגיאה: ' + e.message;
+      : e.code === 'auth/too-many-requests' ? 'יותר מדי ניסיונות. נסה שוב מאוחר יותר'
+      : 'שגיאה: ' + (e?.message || 'לא ידוע');
     showToast(msg, 'error');
   }
 }
