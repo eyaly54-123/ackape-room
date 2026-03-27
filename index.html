@@ -1,2481 +1,887 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EscapeIQ – פלטפורמת חדרי הבריחה החכמה</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
-
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA8Pp5gYXPa7G0lr3LJs-c1NtsnQxzD2HE",
-    authDomain: "test123-4085c.firebaseapp.com",
-    databaseURL: "https://test123-4085c-default-rtdb.firebaseio.com",
-    projectId: "test123-4085c",
-    storageBucket: "test123-4085c.firebasestorage.app",
-    messagingSenderId: "695161562913",
-    appId: "1:695161562913:web:f81d4e7b3f633cb1308060",
-    measurementId: "G-11SYV1SDHX"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const googleProvider = new GoogleAuthProvider();
-
-  // EmailJS
-  const EMAILJS_SERVICE = "service_6n81v0z";
-  const EMAILJS_TEMPLATE = "template_hmdwhpi";
-  const EMAILJS_PUBLIC = "BOlMG6D8gQQJjLiyJ";
-
-  window._fb = { auth, db, googleProvider, signOut, createUserWithEmailAndPassword,
-    signInWithEmailAndPassword, signInWithPopup, onAuthStateChanged,
-    doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, serverTimestamp };
-
-  // Auth state
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      const data = snap.exists() ? snap.data() : {};
-      window._currentUser = { ...user, ...data };
-      if (window._onAuthReady) window._onAuthReady(window._currentUser);
-    } else {
-      window._currentUser = null;
-      if (window._onAuthReady) window._onAuthReady(null);
-    }
-  });
-
-  // EmailJS send
-  window.sendOTPEmail = async function(toEmail, userName, otp) {
-    const digits = otp.toString().split('');
-    const params = {
-      USER_NAME: userName,
-      USER_EMAIL: toEmail,
-      D1: digits[0], D2: digits[1], D3: digits[2],
-      D4: digits[3], D5: digits[4], D6: digits[5],
-      TIMESTAMP: new Date().toLocaleTimeString('he-IL'),
-      IP_ADDRESS: '—',
-      DEVICE: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop',
-      VERIFY_TOKEN: Math.random().toString(36).slice(2),
-      USER_ID: toEmail
-    };
-    try {
-      await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params, EMAILJS_PUBLIC);
-      return true;
-    } catch(e) {
-      console.error('EmailJS error:', e);
-      return false;
-    }
-  };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script>emailjs.init("BOlMG6D8gQQJjLiyJ");</script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EscapeIQ — חדרי בריחה אינטראקטיביים</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ═══════════════════════════════════════════════
-   VARIABLES & RESET
-═══════════════════════════════════════════════ */
-:root {
-  --cyan: #00d4ff;
-  --purple: #a855f7;
-  --pink: #f059f0;
-  --gold: #ffc800;
-  --red: #ff4466;
-  --green: #00ff88;
-  --bg: #04060f;
-  --bg2: #070b18;
-  --bg3: #0a0f20;
-  --card: #0c1428;
-  --border: rgba(0,212,255,0.18);
-  --text: #e8edf5;
-  --muted: #7889a8;
-  --font-display: 'Orbitron', monospace;
-  --font-body: 'Heebo', sans-serif;
-  --radius: 14px;
-  --glow-cyan: 0 0 30px rgba(0,212,255,0.3);
-  --glow-purple: 0 0 30px rgba(168,85,247,0.3);
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:var(--font-body);
-  min-height:100vh;
-  overflow-x:hidden;
-}
-::-webkit-scrollbar{width:6px;}
-::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  :root {
+    --bg-deep: #050714;
+    --bg-dark: #080d1f;
+    --bg-card: #0d1530;
+    --bg-card2: #111a3a;
+    --border: rgba(100,120,255,0.18);
+    --border-glow: rgba(139,92,246,0.4);
+    --cyan: #00e5ff;
+    --purple: #8b5cf6;
+    --pink: #ec4899;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --text: #e2e8f0;
+    --text-muted: #6b7a9e;
+    --gradient-main: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #00e5ff 100%);
+    --gradient-btn: linear-gradient(135deg, #00e5ff 0%, #8b5cf6 100%);
+    --gradient-card: linear-gradient(160deg, rgba(139,92,246,0.08) 0%, rgba(59,130,246,0.04) 100%);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-/* ═══════════════════════════════════════════════
-   PAGES SYSTEM
-═══════════════════════════════════════════════ */
-.page{display:none;min-height:100vh;}
-.page.active{display:block;}
+  /* ========== PAGES ========== */
+  .page { display:none; min-height:100vh; }
+  .page.active { display:block; }
 
-/* ═══════════════════════════════════════════════
-   SHARED COMPONENTS
-═══════════════════════════════════════════════ */
-.grid-bg{
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-  background-size:60px 60px;
-}
-.noise{
-  position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.03;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+  /* ========== NAV ========== */
+  nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    background: rgba(5,7,20,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 900;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    cursor: pointer;
+    letter-spacing: 2px;
+  }
+  .nav-logo span { color: var(--cyan); -webkit-text-fill-color: var(--cyan); }
+  .nav-links { display:flex; gap:8px; align-items:center; }
+  .nav-link {
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    border: none; background: none;
+  }
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .nav-link.active { color: var(--cyan); }
+  .btn-nav {
+    padding: 8px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Heebo', sans-serif;
+    border: 1.5px solid var(--purple);
+    background: transparent;
+    color: var(--purple);
+    transition: all 0.25s;
+  }
+  .btn-nav:hover { background: var(--purple); color: #fff; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+  .btn-nav-primary {
+    background: var(--gradient-btn);
+    border: none; color: #fff;
+    padding: 8px 22px; border-radius: 8px;
+    cursor: pointer; font-size:0.9rem; font-weight:600;
+    font-family: 'Heebo', sans-serif;
+    transition: all 0.25s;
+    box-shadow: 0 0 20px rgba(0,229,255,0.2);
+  }
+  .btn-nav-primary:hover { box-shadow: 0 0 30px rgba(0,229,255,0.4); transform: translateY(-1px); }
 
-.btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:12px 28px;border-radius:8px;border:none;cursor:pointer;
-  font-family:var(--font-display);font-size:12px;font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;
-  transition:all .25s;
-}
-.btn-primary{
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  color:#fff;box-shadow:0 4px 20px rgba(0,212,255,0.25);
-}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,255,0.4);}
-.btn-outline{
-  background:transparent;color:var(--cyan);
-  border:1px solid var(--border);
-}
-.btn-outline:hover{background:rgba(0,212,255,0.08);border-color:var(--cyan);}
-.btn-ghost{background:transparent;color:var(--muted);}
-.btn-ghost:hover{color:var(--text);}
-.btn-danger{background:rgba(255,68,102,0.15);color:var(--red);border:1px solid rgba(255,68,102,0.3);}
-.btn-danger:hover{background:rgba(255,68,102,0.25);}
+  /* ========== HERO ========== */
+  .hero {
+    padding-top: 64px;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position:absolute; inset:0; z-index:0;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(139,92,246,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,255,0.07) 0%, transparent 60%);
+  }
+  .grid-bg {
+    position:absolute; inset:0; z-index:0;
+    background-image:
+      linear-gradient(rgba(100,120,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100,120,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .floating-orb {
+    position:absolute; border-radius:50%; filter:blur(60px); animation: float 8s ease-in-out infinite;
+  }
+  .orb1 { width:300px;height:300px; background:rgba(139,92,246,0.15); top:10%;left:5%; animation-delay:0s; }
+  .orb2 { width:200px;height:200px; background:rgba(0,229,255,0.1); top:60%;right:10%; animation-delay:3s; }
+  .orb3 { width:150px;height:150px; background:rgba(236,72,153,0.08); bottom:20%;left:30%; animation-delay:5s; }
+  @keyframes float {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.05); }
+  }
+  .hero-content { position:relative;z-index:1; max-width:1200px; margin:0 auto; padding:80px 40px; text-align:center; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3);
+    padding:6px 16px; border-radius:100px; font-size:0.82rem;
+    color: var(--purple); margin-bottom:32px; letter-spacing:1px;
+  }
+  .hero-badge-dot { width:6px;height:6px;border-radius:50%;background:var(--purple);animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
+  .hero-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+  }
+  .hero-subtitle {
+    font-size: 1.2rem; color: var(--text-muted);
+    max-width: 600px; margin: 0 auto 48px;
+    line-height: 1.7;
+  }
+  .hero-btns { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:80px; }
+  .btn-primary {
+    padding: 14px 36px; border-radius:12px; font-size:1rem; font-weight:700;
+    font-family:'Heebo',sans-serif;
+    background: var(--gradient-btn); border:none; color:#fff; cursor:pointer;
+    box-shadow: 0 0 40px rgba(0,229,255,0.25), 0 8px 32px rgba(0,0,0,0.3);
+    transition: all 0.25s; letter-spacing:0.5px;
+  }
+  .btn-primary:hover { transform:translateY(-3px); box-shadow: 0 0 60px rgba(0,229,255,0.4), 0 12px 40px rgba(0,0,0,0.4); }
+  .btn-secondary {
+    padding: 14px 36px; border-radius:12px; font-size:1rem; font-weight:600;
+    font-family:'Heebo',sans-serif;
+    background:transparent; border:1.5px solid var(--border-glow); color:var(--text); cursor:pointer;
+    backdrop-filter:blur(10px); transition:all 0.25s;
+  }
+  .btn-secondary:hover { border-color:var(--purple); color:var(--purple); background:rgba(139,92,246,0.08); }
 
-.card{
-  background:linear-gradient(160deg,#0c1428 0%,#0a0f1e 60%,#0d0820 100%);
-  border:1px solid var(--border);border-radius:var(--radius);
-  box-shadow:0 0 60px rgba(0,212,255,0.06);
-}
+  /* stats row */
+  .hero-stats { display:flex; justify-content:center; gap:60px; flex-wrap:wrap; }
+  .stat { text-align:center; }
+  .stat-num {
+    font-family:'Orbitron',monospace; font-size:2rem; font-weight:700;
+    background:var(--gradient-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .stat-label { font-size:0.85rem; color:var(--text-muted); margin-top:4px; }
 
-.badge{
-  display:inline-block;padding:3px 10px;border-radius:20px;
-  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-}
-.badge-cyan{background:rgba(0,212,255,0.12);color:var(--cyan);border:1px solid rgba(0,212,255,0.25);}
-.badge-purple{background:rgba(168,85,247,0.12);color:var(--purple);border:1px solid rgba(168,85,247,0.25);}
-.badge-gold{background:rgba(255,200,0,0.12);color:var(--gold);border:1px solid rgba(255,200,0,0.25);}
-.badge-green{background:rgba(0,255,136,0.12);color:var(--green);border:1px solid rgba(0,255,136,0.25);}
+  /* features */
+  .section { max-width:1200px; margin:0 auto; padding:100px 40px; }
+  .section-tag {
+    display:inline-block; background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.2);
+    padding:4px 14px; border-radius:100px; font-size:0.78rem; color:var(--cyan);
+    letter-spacing:2px; text-transform:uppercase; margin-bottom:16px;
+  }
+  .section-title {
+    font-family:'Orbitron',monospace; font-size:clamp(1.8rem,3.5vw,2.8rem);
+    font-weight:700; margin-bottom:16px;
+    background:var(--gradient-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .section-sub { color:var(--text-muted); font-size:1.05rem; max-width:550px; line-height:1.7; }
+  .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; margin-top:60px; }
+  .feature-card {
+    background:var(--gradient-card);
+    border:1px solid var(--border);
+    border-radius:16px; padding:32px;
+    transition:all 0.3s; position:relative; overflow:hidden;
+  }
+  .feature-card::before {
+    content:''; position:absolute; top:0;left:0;right:0; height:1px;
+    background:var(--gradient-main); opacity:0; transition:opacity 0.3s;
+  }
+  .feature-card:hover { border-color:var(--border-glow); transform:translateY(-4px); box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .feature-card:hover::before { opacity:1; }
+  .feature-icon {
+    width:52px;height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; margin-bottom:20px;
+    background: rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.2);
+  }
+  .feature-title { font-size:1.1rem; font-weight:700; margin-bottom:10px; color:var(--text); }
+  .feature-desc { font-size:0.92rem; color:var(--text-muted); line-height:1.7; }
 
-input,textarea,select{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:8px;
-  color:var(--text);
-  font-family:var(--font-body);font-size:15px;
-  padding:12px 16px;width:100%;
-  transition:border-color .2s,box-shadow .2s;
-  outline:none;
-}
-input:focus,textarea:focus,select:focus{
-  border-color:var(--cyan);
-  box-shadow:0 0 0 3px rgba(0,212,255,0.1);
-}
-input::placeholder{color:var(--muted);}
-label{
-  display:block;font-size:12px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;color:var(--muted);
-  margin-bottom:6px;
-}
+  /* themes */
+  .themes-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-top:60px; }
+  .theme-card {
+    border-radius:16px; padding:28px; border:1px solid var(--border);
+    position:relative; overflow:hidden; cursor:pointer; transition:all 0.3s;
+  }
+  .theme-card:hover { transform:translateY(-4px); box-shadow:0 20px 60px rgba(0,0,0,0.4); }
+  .theme-cyber { background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(0,255,128,0.05)); border-color:rgba(0,229,255,0.2); }
+  .theme-lab { background: linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.05)); border-color:rgba(236,72,153,0.2); }
+  .theme-prison { background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(239,68,68,0.05)); border-color:rgba(251,191,36,0.2); }
+  .theme-label { font-size:0.78rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:12px; }
+  .theme-cyber .theme-label { color:var(--cyan); }
+  .theme-lab .theme-label { color:var(--pink); }
+  .theme-prison .theme-label { color:#fbbf24; }
+  .theme-name { font-family:'Orbitron',monospace; font-size:1.2rem; font-weight:700; margin-bottom:10px; }
+  .theme-desc { font-size:0.88rem; color:var(--text-muted); line-height:1.6; }
+  .theme-effect {
+    margin-top:16px; display:inline-flex; align-items:center; gap:6px;
+    font-size:0.8rem; padding:4px 12px; border-radius:100px;
+  }
+  .theme-cyber .theme-effect { background:rgba(0,229,255,0.1); color:var(--cyan); }
+  .theme-lab .theme-effect { background:rgba(236,72,153,0.1); color:var(--pink); }
+  .theme-prison .theme-effect { background:rgba(251,191,36,0.1); color:#fbbf24; }
 
-.toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:center;}
-.toast{
-  padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;
-  box-shadow:0 8px 30px rgba(0,0,0,0.4);
-  animation:toastIn .3s ease;
-  display:flex;align-items:center;gap:10px;
-}
-.toast-success{background:#001a10;border:1px solid rgba(0,255,136,0.3);color:var(--green);}
-.toast-error{background:#1a0008;border:1px solid rgba(255,68,102,0.3);color:var(--red);}
-.toast-info{background:#001020;border:1px solid rgba(0,212,255,0.3);color:var(--cyan);}
-@keyframes toastIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  /* CTA section */
+  .cta-section {
+    text-align:center; padding:100px 40px;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(139,92,246,0.1) 0%, transparent 70%);
+  }
+  .cta-section .section-title { margin-bottom:24px; }
+  .cta-section .section-sub { margin:0 auto 48px; }
 
-/* ═══════════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════════ */
-.nav{
-  position:fixed;top:0;left:0;right:0;z-index:1000;
-  background:rgba(4,6,15,0.85);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  padding:0 32px;height:64px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.nav-logo{
-  font-family:var(--font-display);font-size:20px;font-weight:900;
-  letter-spacing:2px;text-decoration:none;cursor:pointer;
-}
-.nav-logo .c1{color:var(--cyan);}
-.nav-logo .c2{color:var(--pink);}
-.nav-links{display:flex;align-items:center;gap:8px;}
-.nav-link{
-  padding:8px 16px;border-radius:6px;font-size:13px;
-  color:var(--muted);cursor:pointer;transition:color .2s,background .2s;
-  font-weight:500;
-}
-.nav-link:hover,.nav-link.active{color:var(--text);background:rgba(255,255,255,0.06);}
+  /* ========== AUTH PAGE ========== */
+  .auth-page {
+    min-height: 100vh; padding-top:64px;
+    display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden;
+  }
+  .auth-bg {
+    position:absolute;inset:0;z-index:0;
+    background: radial-gradient(ellipse 70% 80% at 40% 50%, rgba(139,92,246,0.1) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 70% 60%, rgba(0,229,255,0.06) 0%, transparent 60%);
+  }
+  .auth-container {
+    position:relative;z-index:1;
+    display:grid; grid-template-columns:1fr 1fr; gap:32px;
+    max-width:900px; width:90%; padding:20px;
+  }
+  .auth-card {
+    background: rgba(13,21,48,0.9);
+    border:1px solid var(--border);
+    border-radius:20px; padding:36px;
+    backdrop-filter:blur(20px);
+  }
+  .auth-tabs { display:flex; border-bottom:1px solid var(--border); margin-bottom:32px; }
+  .auth-tab {
+    flex:1; padding:12px; text-align:center; cursor:pointer;
+    font-size:0.95rem; font-weight:600; color:var(--text-muted);
+    border-bottom:2px solid transparent; transition:all 0.25s; margin-bottom:-1px;
+  }
+  .auth-tab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+  .auth-title { font-size:1.4rem; font-weight:700; margin-bottom:6px; }
+  .auth-sub { font-size:0.88rem; color:var(--text-muted); margin-bottom:24px; }
+  .btn-google {
+    width:100%; padding:12px; border-radius:10px;
+    background:rgba(255,255,255,0.05); border:1px solid var(--border);
+    color:var(--text); cursor:pointer; font-size:0.95rem; font-weight:500;
+    font-family:'Heebo',sans-serif; display:flex; align-items:center; justify-content:center; gap:10px;
+    transition:all 0.25s; margin-bottom:20px;
+  }
+  .btn-google:hover { background:rgba(255,255,255,0.09); border-color:rgba(255,255,255,0.2); }
+  .google-icon {
+    width:20px;height:20px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3C/svg%3E") center/contain no-repeat;
+    flex-shrink:0;
+  }
+  .divider { display:flex; align-items:center; gap:12px; margin:0 0 20px; color:var(--text-muted); font-size:0.85rem; }
+  .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .form-group { margin-bottom:14px; }
+  .form-label { display:block; font-size:0.82rem; color:var(--text-muted); margin-bottom:6px; text-align:right; }
+  .form-input {
+    width:100%; padding:11px 14px; border-radius:10px;
+    background:rgba(255,255,255,0.04); border:1px solid var(--border);
+    color:var(--text); font-size:0.93rem; font-family:'Heebo',sans-serif;
+    transition:all 0.25s; outline:none; text-align:right;
+  }
+  .form-input:focus { border-color:var(--cyan); box-shadow:0 0 0 3px rgba(0,229,255,0.1); }
+  .form-input::placeholder { color:var(--text-muted); }
+  .btn-submit {
+    width:100%; padding:13px; border-radius:10px; margin-top:6px;
+    background:var(--gradient-btn); border:none; color:#fff;
+    font-size:1rem; font-weight:700; font-family:'Heebo',sans-serif;
+    cursor:pointer; transition:all 0.25s;
+    box-shadow: 0 0 30px rgba(0,229,255,0.2);
+  }
+  .btn-submit:hover { box-shadow:0 0 50px rgba(0,229,255,0.35); transform:translateY(-2px); }
+  .forgot { display:block; text-align:center; font-size:0.85rem; color:var(--cyan); margin-top:14px; cursor:pointer; }
+  .forgot:hover { text-decoration:underline; }
+  .pw-hint { font-size:0.78rem; color:var(--text-muted); margin-top:4px; }
 
-/* ═══════════════════════════════════════════════
-   PAGE 1: LANDING
-═══════════════════════════════════════════════ */
-#page-home{position:relative;}
+  /* verify code */
+  .verify-box {
+    display:none; padding:32px; text-align:center;
+    background:rgba(13,21,48,0.95); border:1px solid var(--border);
+    border-radius:20px; backdrop-filter:blur(20px);
+  }
+  .verify-box.active { display:block; }
+  .verify-icon { font-size:3rem; margin-bottom:16px; }
+  .verify-title { font-size:1.3rem; font-weight:700; margin-bottom:8px; }
+  .verify-sub { font-size:0.9rem; color:var(--text-muted); margin-bottom:28px; }
+  .code-inputs { display:flex; gap:10px; justify-content:center; margin-bottom:24px; }
+  .code-input {
+    width:48px;height:56px; border-radius:10px; text-align:center;
+    background:rgba(255,255,255,0.05); border:1px solid var(--border);
+    color:var(--text); font-size:1.4rem; font-weight:700; font-family:'Orbitron',monospace;
+    outline:none; transition:all 0.25s;
+  }
+  .code-input:focus { border-color:var(--cyan); box-shadow:0 0 0 3px rgba(0,229,255,0.15); }
+  .resend { font-size:0.85rem; color:var(--text-muted); }
+  .resend span { color:var(--cyan); cursor:pointer; }
 
-.hero{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  text-align:center;padding:100px 24px 60px;position:relative;
-}
-.hero-glow-1{
-  position:absolute;top:-100px;left:50%;transform:translateX(-50%);
-  width:800px;height:800px;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(0,212,255,0.12) 0%,transparent 60%);
-  pointer-events:none;
-}
-.hero-glow-2{
-  position:absolute;bottom:-200px;right:-100px;
-  width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(168,85,247,0.1) 0%,transparent 60%);
-  pointer-events:none;
-}
-.hero-content{position:relative;z-index:1;max-width:760px;}
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:6px 16px;border-radius:20px;
-  background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);
-  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
-  color:var(--cyan);margin-bottom:28px;
-}
-.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.4);}}
+  /* ========== PRICING PAGE ========== */
+  .pricing-page { padding-top:64px; }
+  .pricing-hero { text-align:center; padding:80px 40px 60px; }
+  .pricing-grid {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:20px;
+    max-width:1200px; margin:0 auto; padding:0 30px 100px;
+  }
+  @media(max-width:900px){
+    .pricing-grid{grid-template-columns:1fr 1fr;}
+    .auth-container{grid-template-columns:1fr;}
+  }
+  @media(max-width:600px){
+    .pricing-grid{grid-template-columns:1fr;}
+    .features-grid{grid-template-columns:1fr;}
+  }
+  .pricing-card {
+    background: rgba(13,21,48,0.8);
+    border:1px solid var(--border); border-radius:20px; padding:32px 26px;
+    position:relative; overflow:hidden; transition:all 0.3s;
+    display:flex; flex-direction:column;
+  }
+  .pricing-card:hover { transform:translateY(-6px); box-shadow:0 24px 80px rgba(0,0,0,0.4); }
+  .pricing-card.popular {
+    border-color:var(--purple); box-shadow:0 0 40px rgba(139,92,246,0.2);
+  }
+  .popular-badge {
+    position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,var(--pink),var(--purple));
+    padding:5px 18px; border-radius:0 0 12px 12px;
+    font-size:0.78rem; font-weight:700; color:#fff; white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+  }
+  .pricing-tier { font-size:0.82rem; color:var(--text-muted); text-align:left; letter-spacing:1px; margin-bottom:16px; }
+  .pricing-price {
+    font-family:'Orbitron',monospace; font-size:2.8rem; font-weight:900;
+    color:var(--text); margin-bottom:4px; text-align:left; line-height:1;
+  }
+  .pricing-price sup { font-size:1.2rem; vertical-align:super; }
+  .pricing-period { font-size:0.85rem; color:var(--text-muted); text-align:left; margin-bottom:28px; }
+  .pricing-features { list-style:none; flex:1; margin-bottom:28px; }
+  .pricing-features li {
+    display:flex; align-items:center; gap:10px;
+    padding:7px 0; font-size:0.9rem; color:var(--text);
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .pricing-features li:last-child { border-bottom:none; }
+  .check { color:var(--green); font-size:0.9rem; flex-shrink:0; }
+  .pricing-btn {
+    width:100%; padding:12px; border-radius:12px;
+    font-size:0.95rem; font-weight:700; font-family:'Heebo',sans-serif;
+    cursor:pointer; transition:all 0.25s;
+  }
+  .pricing-btn-outline {
+    background:transparent; border:1px solid var(--border);
+    color:var(--text);
+  }
+  .pricing-btn-outline:hover { border-color:var(--purple); color:var(--purple); }
+  .pricing-btn-primary {
+    background:var(--gradient-btn); border:none; color:#fff;
+    box-shadow:0 0 30px rgba(0,229,255,0.2);
+  }
+  .pricing-btn-primary:hover { box-shadow:0 0 50px rgba(0,229,255,0.35); transform:translateY(-2px); }
+  .pricing-btn-dark {
+    background:rgba(255,255,255,0.05); border:1px solid var(--border);
+    color:var(--text-muted);
+  }
+  .pricing-btn-dark:hover { background:rgba(255,255,255,0.08); color:var(--text); }
 
-.hero-title{
-  font-family:var(--font-display);
-  font-size:clamp(36px,7vw,80px);
-  font-weight:900;line-height:1.05;letter-spacing:-1px;
-  margin-bottom:24px;
-}
-.hero-title .line1{color:#fff;}
-.hero-title .line2{
-  background:linear-gradient(135deg,var(--cyan) 0%,var(--purple) 50%,var(--pink) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  display:block;
-}
-.hero-sub{
-  font-size:18px;color:var(--muted);line-height:1.7;
-  margin-bottom:44px;max-width:540px;margin-left:auto;margin-right:auto;
-}
-.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  /* trial banner */
+  .trial-banner {
+    max-width:600px; margin:0 auto 48px;
+    background:rgba(0,229,255,0.06); border:1px solid rgba(0,229,255,0.2);
+    border-radius:14px; padding:18px 24px;
+    display:flex; align-items:center; gap:16px; justify-content:center;
+  }
+  .trial-icon { font-size:1.6rem; }
+  .trial-text strong { color:var(--cyan); display:block; font-size:1rem; }
+  .trial-text span { font-size:0.87rem; color:var(--text-muted); }
 
-.hero-stats{
-  display:flex;justify-content:center;gap:48px;margin-top:80px;
-  border-top:1px solid var(--border);padding-top:48px;flex-wrap:wrap;
-}
-.hero-stat-val{
-  font-family:var(--font-display);font-size:32px;font-weight:900;
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.hero-stat-label{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;}
+  /* comparison table */
+  .compare-section { max-width:1000px; margin:0 auto 100px; padding:0 30px; }
+  .compare-title {
+    font-family:'Orbitron',monospace; font-size:1.5rem; font-weight:700;
+    text-align:center; margin-bottom:32px;
+    background:var(--gradient-main); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .compare-table { width:100%; border-collapse:collapse; }
+  .compare-table th, .compare-table td {
+    padding:14px 18px; text-align:center; font-size:0.88rem;
+    border-bottom:1px solid var(--border);
+  }
+  .compare-table th { color:var(--text-muted); font-weight:600; font-size:0.82rem; letter-spacing:0.5px; }
+  .compare-table th:first-child, .compare-table td:first-child { text-align:right; color:var(--text); font-weight:500; }
+  .compare-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .col-pro { color:var(--cyan); font-weight:700; }
+  .col-ultra { color:var(--purple); font-weight:700; }
+  .col-biz { color:var(--pink); font-weight:700; }
 
-/* Features */
-.section{padding:100px 24px;position:relative;}
-.section-title{
-  font-family:var(--font-display);font-size:clamp(24px,4vw,40px);
-  font-weight:900;letter-spacing:-0.5px;margin-bottom:16px;
-}
-.section-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:560px;}
+  /* footer */
+  footer {
+    border-top:1px solid var(--border); padding:40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;
+  }
+  .footer-logo { font-family:'Orbitron',monospace; font-size:1rem; font-weight:700; color:var(--text-muted); }
+  .footer-links { display:flex; gap:24px; flex-wrap:wrap; }
+  .footer-link { font-size:0.85rem; color:var(--text-muted); cursor:pointer; transition:color 0.2s; }
+  .footer-link:hover { color:var(--cyan); }
+  .footer-copy { font-size:0.82rem; color:var(--text-muted); }
 
-.features-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:20px;margin-top:56px;
-}
-.feature-card{
-  padding:28px;border-radius:var(--radius);
-  background:linear-gradient(160deg,rgba(0,212,255,0.04),rgba(168,85,247,0.04));
-  border:1px solid var(--border);
-  transition:transform .3s,border-color .3s,box-shadow .3s;
-  cursor:default;
-}
-.feature-card:hover{
-  transform:translateY(-4px);
-  border-color:rgba(0,212,255,0.35);
-  box-shadow:0 12px 40px rgba(0,212,255,0.1);
-}
-.feature-icon{font-size:32px;margin-bottom:16px;display:block;}
-.feature-title{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:1px;margin-bottom:10px;color:#fff;}
-.feature-desc{font-size:14px;color:var(--muted);line-height:1.7;}
+  /* glow effects */
+  .glow-text { text-shadow:0 0 30px rgba(0,229,255,0.3); }
+  .cyber-border { border:1px solid rgba(0,229,255,0.2); box-shadow:inset 0 0 20px rgba(0,229,255,0.03); }
 
-/* Pricing */
-.pricing-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;margin-top:56px;
-}
-.pricing-card{
-  padding:32px 24px;border-radius:var(--radius);
-  border:1px solid var(--border);
-  background:var(--card);
-  position:relative;transition:transform .3s,box-shadow .3s;
-}
-.pricing-card:hover{transform:translateY(-6px);}
-.pricing-card.featured{
-  border-color:var(--purple);
-  box-shadow:0 0 40px rgba(168,85,247,0.2);
-}
-.pricing-card.featured::before{
-  content:'הכי פופולרי';
-  position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-  background:linear-gradient(135deg,var(--purple),var(--pink));
-  color:#fff;font-size:10px;font-weight:700;letter-spacing:1px;
-  padding:4px 14px;border-radius:20px;
-}
-.pricing-name{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:8px;}
-.pricing-price{font-family:var(--font-display);font-size:36px;font-weight:900;color:#fff;line-height:1;}
-.pricing-price span{font-size:16px;color:var(--muted);font-family:var(--font-body);}
-.pricing-features{margin-top:24px;display:flex;flex-direction:column;gap:10px;}
-.pricing-feature{font-size:13px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;}
-.pricing-feature::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px;}
-
-/* Escape room preview */
-.escape-preview{
-  display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center;margin-top:56px;
-}
-.escape-map{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:24px;aspect-ratio:4/3;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;overflow:hidden;
-}
-.escape-map-grid{
-  display:grid;grid-template-columns:repeat(5,1fr);
-  grid-template-rows:repeat(4,1fr);gap:8px;width:100%;height:100%;
-}
-.map-cell{
-  border-radius:6px;background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.06);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;transition:all .3s;cursor:pointer;
-}
-.map-cell.active{
-  background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.4);
-  box-shadow:0 0 12px rgba(0,212,255,0.3);
-}
-.map-cell.locked{opacity:.3;}
-.map-cell.completed{
-  background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.3);
-}
-
-/* ═══════════════════════════════════════════════
-   PAGE 2: AUTH
-═══════════════════════════════════════════════ */
-#page-auth{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  padding:100px 24px 60px;position:relative;
-}
-.auth-glow{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(168,85,247,0.1) 0%,transparent 60%);
-  pointer-events:none;
-}
-.auth-card{
-  width:100%;max-width:440px;position:relative;z-index:1;
-}
-.auth-tabs{display:flex;margin-bottom:32px;border-bottom:1px solid var(--border);}
-.auth-tab{
-  flex:1;padding:14px;text-align:center;cursor:pointer;
-  font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:1.5px;
-  color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;
-  transition:all .2s;
-}
-.auth-tab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
-.auth-form{display:none;}
-.auth-form.active{display:block;}
-.auth-inner{padding:36px;background:linear-gradient(160deg,#0c1428,#0a0f1e);border:1px solid var(--border);border-radius:var(--radius);}
-.auth-title{font-family:var(--font-display);font-size:20px;font-weight:900;margin-bottom:6px;}
-.auth-sub{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.6;}
-.form-group{margin-bottom:20px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.google-btn{
-  width:100%;padding:13px;border-radius:8px;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
-  color:var(--text);font-size:14px;font-weight:500;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  transition:all .2s;margin-bottom:20px;
-}
-.google-btn:hover{background:rgba(255,255,255,0.09);}
-.google-btn img{width:18px;height:18px;}
-.auth-divider{
-  display:flex;align-items:center;gap:12px;margin-bottom:20px;
-}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-.auth-divider span{font-size:12px;color:var(--muted);}
-.auth-submit{width:100%;padding:14px;font-size:13px;}
-
-/* OTP */
-.otp-grid{display:flex;gap:10px;justify-content:center;margin:20px 0;}
-.otp-input{
-  width:52px;height:64px;text-align:center;
-  font-family:var(--font-display);font-size:24px;font-weight:700;
-  color:var(--cyan);background:rgba(0,0,0,0.3);
-  border:1px solid rgba(0,212,255,0.3);border-radius:8px;
-  transition:all .2s;padding:0;
-}
-.otp-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,0.15);}
-
-/* ═══════════════════════════════════════════════
-   PAGE 3: DASHBOARD
-═══════════════════════════════════════════════ */
-#page-dashboard{padding-top:64px;}
-.dashboard-layout{display:flex;min-height:calc(100vh - 64px);}
-
-/* Sidebar */
-.sidebar{
-  width:240px;flex-shrink:0;
-  background:rgba(7,11,24,0.9);
-  border-left:1px solid var(--border);
-  padding:24px 0;
-  position:sticky;top:64px;height:calc(100vh - 64px);
-  overflow-y:auto;
-  display:flex;flex-direction:column;
-}
-.sidebar-user{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
-.sidebar-avatar{
-  width:48px;height:48px;border-radius:50%;
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display);font-size:18px;font-weight:900;
-  color:#fff;margin-bottom:10px;
-}
-.sidebar-name{font-weight:700;font-size:15px;margin-bottom:4px;}
-.sidebar-rank{font-size:12px;color:var(--muted);}
-
-.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 12px;flex:1;}
-.sidebar-link{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 12px;border-radius:8px;cursor:pointer;
-  font-size:14px;font-weight:500;color:var(--muted);
-  transition:all .2s;
-}
-.sidebar-link:hover{color:var(--text);background:rgba(255,255,255,0.05);}
-.sidebar-link.active{color:var(--cyan);background:rgba(0,212,255,0.08);}
-.sidebar-link-icon{width:20px;text-align:center;font-size:16px;flex-shrink:0;}
-.sidebar-bottom{padding:16px 12px 0;border-top:1px solid var(--border);}
-
-/* Main content */
-.dashboard-main{flex:1;padding:32px;min-width:0;}
-.dash-header{margin-bottom:32px;}
-.dash-title{font-family:var(--font-display);font-size:24px;font-weight:900;margin-bottom:6px;}
-.dash-sub{font-size:14px;color:var(--muted);}
-
-/* Projects grid */
-.projects-grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-  gap:20px;
-}
-.project-card{
-  border-radius:var(--radius);border:1px solid var(--border);
-  background:var(--card);overflow:hidden;cursor:pointer;
-  transition:transform .25s,box-shadow .25s,border-color .25s;
-}
-.project-card:hover{transform:translateY(-4px);border-color:rgba(0,212,255,0.35);box-shadow:0 12px 40px rgba(0,0,0,0.3);}
-.project-thumb{
-  height:120px;display:flex;align-items:center;justify-content:center;
-  font-size:40px;position:relative;overflow:hidden;
-}
-.project-thumb-escape{background:linear-gradient(135deg,#001a2e,#0d0020);}
-.project-thumb-quiz{background:linear-gradient(135deg,#001020,#001a10);}
-.project-body{padding:16px;}
-.project-name{font-weight:700;font-size:15px;margin-bottom:6px;}
-.project-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;}
-
-.new-project-card{
-  border:2px dashed rgba(0,212,255,0.2);
-  background:transparent;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:12px;min-height:200px;cursor:pointer;
-  transition:all .25s;border-radius:var(--radius);
-}
-.new-project-card:hover{
-  border-color:var(--cyan);background:rgba(0,212,255,0.04);
-}
-.new-project-icon{
-  width:56px;height:56px;border-radius:50%;
-  background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;
-}
-.new-project-label{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--cyan);}
-
-/* Stats panel */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:32px;}
-.stat-card{
-  padding:20px 24px;border-radius:var(--radius);
-  background:var(--card);border:1px solid var(--border);
-}
-.stat-val{
-  font-family:var(--font-display);font-size:28px;font-weight:900;
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.stat-label{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
-
-/* XP bar */
-.xp-bar-wrap{margin-top:8px;}
-.xp-bar{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
-.xp-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .8s ease;}
-.xp-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;}
-
-/* Ranks */
-.rank-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;
-}
-.rank-noob{background:rgba(120,137,168,0.15);color:var(--muted);border:1px solid rgba(120,137,168,0.25);}
-.rank-hacker{background:rgba(0,212,255,0.12);color:var(--cyan);border:1px solid rgba(0,212,255,0.25);}
-.rank-god{background:linear-gradient(135deg,rgba(255,200,0,0.15),rgba(255,68,102,0.15));color:var(--gold);border:1px solid rgba(255,200,0,0.3);}
-
-/* ═══════════════════════════════════════════════
-   PAGE 4: CREATOR
-═══════════════════════════════════════════════ */
-#page-creator{padding-top:64px;}
-.creator-layout{display:flex;height:calc(100vh - 64px);}
-
-/* Slide panel */
-.slides-panel{
-  width:200px;flex-shrink:0;
-  background:rgba(4,6,15,0.95);
-  border-left:1px solid var(--border);
-  overflow-y:auto;padding:16px 12px;
-  display:flex;flex-direction:column;gap:8px;
-}
-.slide-thumb{
-  aspect-ratio:16/10;border-radius:6px;
-  background:var(--card);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:11px;color:var(--muted);
-  transition:all .2s;position:relative;overflow:hidden;
-  padding:8px;text-align:center;
-}
-.slide-thumb:hover,.slide-thumb.active{border-color:var(--cyan);}
-.slide-thumb.active::before{
-  content:'';position:absolute;inset:0;
-  background:rgba(0,212,255,0.06);
-}
-.slide-num{
-  position:absolute;top:4px;right:6px;
-  font-size:9px;color:var(--muted);font-family:var(--font-display);
-}
-.slide-add-btn{
-  aspect-ratio:16/10;border-radius:6px;
-  border:2px dashed rgba(0,212,255,0.2);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:24px;color:var(--muted);
-  transition:all .2s;flex-shrink:0;
-}
-.slide-add-btn:hover{border-color:var(--cyan);color:var(--cyan);}
-
-/* Editor area */
-.editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.editor-toolbar{
-  height:52px;background:rgba(7,11,24,0.95);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:8px;padding:0 20px;
-  flex-shrink:0;
-}
-.toolbar-btn{
-  padding:6px 14px;border-radius:6px;
-  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-  color:var(--muted);font-size:12px;cursor:pointer;
-  display:flex;align-items:center;gap:6px;transition:all .2s;
-}
-.toolbar-btn:hover{color:var(--text);background:rgba(255,255,255,0.08);}
-.toolbar-sep{width:1px;height:24px;background:var(--border);}
-.toolbar-title{
-  font-family:var(--font-display);font-size:12px;font-weight:700;
-  color:var(--cyan);letter-spacing:1px;margin-left:auto;
-}
-
-.editor-canvas{
-  flex:1;overflow-y:auto;padding:32px;
-  display:flex;flex-direction:column;align-items:center;gap:24px;
-}
-
-/* Question card in editor */
-.q-editor-card{
-  width:100%;max-width:720px;
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:24px;
-  transition:border-color .2s;
-}
-.q-editor-card:hover{border-color:rgba(0,212,255,0.3);}
-.q-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.q-num{
-  width:32px;height:32px;border-radius:50%;
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display);font-size:12px;font-weight:700;color:#fff;
-  flex-shrink:0;
-}
-.q-type-badge{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
-.q-actions{margin-right:auto;display:flex;gap:6px;}
-.q-action-btn{
-  width:32px;height:32px;border-radius:6px;cursor:pointer;
-  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-  display:flex;align-items:center;justify-content:center;font-size:14px;
-  transition:all .2s;
-}
-.q-action-btn:hover{background:rgba(255,255,255,0.1);}
-.q-action-btn.danger:hover{background:rgba(255,68,102,0.15);border-color:rgba(255,68,102,0.3);}
-
-.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
-.answer-option{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
-  border-radius:8px;background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.08);cursor:pointer;transition:all .2s;
-}
-.answer-option:hover{background:rgba(255,255,255,0.06);}
-.answer-option.correct{
-  background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.3);
-}
-.answer-check{
-  width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;
-  transition:all .2s;
-}
-.answer-option.correct .answer-check{background:var(--green);border-color:var(--green);color:#000;}
-.answer-input{
-  flex:1;background:transparent;border:none;padding:0;font-size:14px;
-  color:var(--text);outline:none;
-}
-
-/* Right panel */
-.creator-right{
-  width:280px;flex-shrink:0;
-  background:rgba(4,6,15,0.95);border-left:1px solid var(--border);
-  padding:20px;overflow-y:auto;
-}
-.creator-right h3{
-  font-family:var(--font-display);font-size:11px;letter-spacing:2px;
-  color:var(--muted);margin-bottom:16px;text-transform:uppercase;
-}
-.setting-row{margin-bottom:16px;}
-.toggle-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);
-}
-.toggle-label{font-size:13px;color:var(--text);}
-.toggle{
-  width:40px;height:22px;border-radius:11px;background:rgba(255,255,255,0.1);
-  cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;
-}
-.toggle.on{background:linear-gradient(135deg,var(--cyan),var(--purple));}
-.toggle::after{
-  content:'';position:absolute;top:3px;right:3px;width:16px;height:16px;
-  border-radius:50%;background:#fff;transition:transform .2s;
-}
-.toggle.on::after{transform:translateX(-18px);}
-
-/* ═══════════════════════════════════════════════
-   PAGE 5: ESCAPE ROOM CREATOR
-═══════════════════════════════════════════════ */
-.escape-creator-layout{display:flex;height:calc(100vh - 64px);}
-.escape-map-panel{
-  flex:1;padding:32px;overflow:auto;
-  display:flex;align-items:center;justify-content:center;
-}
-.escape-map-editor{
-  width:100%;max-width:700px;
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:24px;
-}
-.escape-map-title{
-  font-family:var(--font-display);font-size:16px;font-weight:700;
-  letter-spacing:1px;margin-bottom:20px;color:#fff;
-}
-.escape-map-grid-editor{
-  display:grid;grid-template-columns:repeat(6,1fr);gap:12px;
-}
-.map-node{
-  aspect-ratio:1;border-radius:10px;
-  border:2px dashed rgba(255,255,255,0.1);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:22px;transition:all .25s;
-  position:relative;
-}
-.map-node.filled{
-  background:rgba(0,212,255,0.08);border:2px solid rgba(0,212,255,0.3);
-  border-style:solid;
-}
-.map-node.active-node{
-  background:rgba(0,212,255,0.15);border-color:var(--cyan);
-  box-shadow:0 0 16px rgba(0,212,255,0.3);
-}
-.map-node.empty:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.2);}
-.map-node-lock{
-  position:absolute;bottom:4px;right:4px;
-  font-size:10px;color:var(--muted);
-}
-
-/* ═══════════════════════════════════════════════
-   PAGE 6: PROFILE / SETTINGS
-═══════════════════════════════════════════════ */
-.profile-grid{display:grid;grid-template-columns:300px 1fr;gap:24px;}
-.profile-card{padding:28px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
-.profile-avatar-big{
-  width:80px;height:80px;border-radius:50%;
-  background:linear-gradient(135deg,var(--cyan),var(--purple));
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display);font-size:30px;font-weight:900;color:#fff;
-  margin:0 auto 16px;
-}
-.profile-name-big{font-family:var(--font-display);font-size:18px;font-weight:900;text-align:center;margin-bottom:6px;}
-.profile-email{font-size:13px;color:var(--muted);text-align:center;margin-bottom:16px;}
-.plan-upgrade{
-  width:100%;padding:12px;border-radius:8px;
-  background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(240,89,240,0.15));
-  border:1px solid rgba(168,85,247,0.3);
-  color:var(--purple);font-size:13px;font-weight:700;
-  cursor:pointer;text-align:center;transition:all .2s;margin-top:12px;
-}
-.plan-upgrade:hover{background:linear-gradient(135deg,rgba(168,85,247,0.25),rgba(240,89,240,0.25));}
-
-/* ═══════════════════════════════════════════════
-   MODAL
-═══════════════════════════════════════════════ */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.75);
-  backdrop-filter:blur(6px);z-index:2000;
-  display:none;align-items:center;justify-content:center;padding:24px;
-}
-.modal-overlay.open{display:flex;}
-.modal{
-  background:linear-gradient(160deg,#0c1428,#0a0f1e);
-  border:1px solid var(--border);border-radius:var(--radius);
-  padding:32px;width:100%;max-width:480px;
-  position:relative;animation:modalIn .25s ease;
-}
-@keyframes modalIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
-.modal-close{
-  position:absolute;top:16px;left:16px;
-  width:32px;height:32px;border-radius:6px;
-  background:rgba(255,255,255,0.05);border:none;color:var(--muted);
-  cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;
-}
-.modal-close:hover{background:rgba(255,255,255,0.1);color:var(--text);}
-.modal-title{font-family:var(--font-display);font-size:18px;font-weight:900;margin-bottom:6px;}
-.modal-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
-.modal-btns{display:flex;gap:10px;margin-top:24px;justify-content:flex-end;}
-
-/* ═══════════════════════════════════════════════
-   LOADING SCREEN
-═══════════════════════════════════════════════ */
-#loading-screen{
-  position:fixed;inset:0;background:var(--bg);z-index:9999;
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:24px;
-}
-.loading-logo{
-  font-family:var(--font-display);font-size:36px;font-weight:900;letter-spacing:4px;
-  animation:logoPulse 1.5s infinite;
-}
-.loading-logo .c1{color:var(--cyan);}
-.loading-logo .c2{color:var(--pink);}
-@keyframes logoPulse{0%,100%{opacity:1;}50%{opacity:.5;}}
-.loading-bar{
-  width:200px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;
-}
-.loading-bar-fill{
-  height:100%;width:0;border-radius:2px;
-  background:linear-gradient(90deg,var(--cyan),var(--purple));
-  animation:loadFill 2s ease-in-out forwards;
-}
-@keyframes loadFill{to{width:100%;}}
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════ */
-@media(max-width:900px){
-  .escape-preview{grid-template-columns:1fr;}
-  .sidebar{width:200px;}
-  .creator-right{display:none;}
-  .profile-grid{grid-template-columns:1fr;}
-}
-@media(max-width:640px){
-  .nav{padding:0 16px;}
-  .dashboard-main{padding:20px 16px;}
-  .sidebar{display:none;}
-  .hero-stats{gap:24px;}
-  .pricing-grid{grid-template-columns:1fr 1fr;}
-  .answer-grid{grid-template-columns:1fr;}
-  .slides-panel{display:none;}
-}
-
-/* Animated border */
-@keyframes borderGlow{
-  0%,100%{border-color:rgba(0,212,255,0.2);}
-  50%{border-color:rgba(168,85,247,0.4);}
-}
-
-/* Floating particles */
-.particle{
-  position:fixed;width:2px;height:2px;border-radius:50%;
-  background:var(--cyan);opacity:0;animation:particleFloat linear infinite;
-  pointer-events:none;z-index:0;
-}
-@keyframes particleFloat{
-  0%{opacity:0;transform:translateY(0);}
-  10%{opacity:.6;}
-  90%{opacity:.6;}
-  100%{opacity:0;transform:translateY(-100vh);}
-}
-
-/* Section container */
-.container{max-width:1200px;margin:0 auto;padding:0 24px;}
+  /* animations */
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(30px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .fade-in { animation:fadeInUp 0.6s ease forwards; }
+  .fade-in-1 { animation-delay:0.1s; opacity:0; }
+  .fade-in-2 { animation-delay:0.2s; opacity:0; }
+  .fade-in-3 { animation-delay:0.3s; opacity:0; }
+  .fade-in-4 { animation-delay:0.4s; opacity:0; }
 </style>
 </head>
 <body>
 
-<!-- Grid & Noise overlays -->
-<div class="grid-bg"></div>
-<div class="noise"></div>
-
-<!-- Loading Screen -->
-<div id="loading-screen">
-  <div class="loading-logo"><span class="c1">ESCAPE</span><span class="c2">IQ</span></div>
-  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
-</div>
-
-<!-- Toast container -->
-<div class="toast-container" id="toast-container"></div>
-
 <!-- NAV -->
-<nav class="nav" id="main-nav" style="display:none;">
-  <div class="nav-logo" onclick="showPage('home')">
-    <span class="c1">ESCAPE</span><span class="c2">IQ</span>
-  </div>
-  <div class="nav-links" id="nav-links">
-    <span class="nav-link" onclick="showPage('home')">בית</span>
-    <span class="nav-link" id="nav-login" onclick="showPage('auth')">התחבר</span>
-    <span class="nav-link" id="nav-dashboard" style="display:none" onclick="showPage('dashboard')">לוח בקרה</span>
-    <span class="nav-link" id="nav-logout" style="display:none" onclick="handleLogout()">התנתק</span>
-    <button class="btn btn-primary" id="nav-cta" onclick="showPage('auth')" style="padding:9px 20px;font-size:11px;">
-      ⚡ התחל עכשיו
-    </button>
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">ESCAPE<span>IQ</span></div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home')">דף הבית</button>
+    <button class="nav-link" onclick="showPage('pricing')">תמחור</button>
+    <button class="btn-nav" onclick="showPage('auth')">כניסה</button>
+    <button class="btn-nav-primary" onclick="showPage('auth')">התחל בחינם</button>
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!--  PAGE: HOME                                     -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="page" id="page-home">
+<!-- ===================== HOME PAGE ===================== -->
+<div id="page-home" class="page active">
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-glow-1"></div>
-    <div class="hero-glow-2"></div>
+    <div class="hero-bg"></div>
+    <div class="grid-bg"></div>
+    <div class="floating-orb orb1"></div>
+    <div class="floating-orb orb2"></div>
+    <div class="floating-orb orb3"></div>
     <div class="hero-content">
-      <div class="hero-eyebrow">✦ פלטפורמת חדרי הבריחה החכמה</div>
-      <h1 class="hero-title">
-        <span class="line1">צור. שחק.</span>
-        <span class="line2">ברח מהגבולות</span>
-      </h1>
-      <p class="hero-sub">
-        בנה חדרי בריחה וחידונים אינטראקטיביים עם מנגנוני משחק מתקדמים,
-        מפות, מצבי משחק ייחודיים ולוחות תוצאות בזמן אמת.
-      </p>
-      <div class="hero-btns">
-        <button class="btn btn-primary" onclick="showPage('auth')">🚀 צור חשבון חינם</button>
-        <button class="btn btn-outline" onclick="scrollToSection('features')">👀 גלה יותר</button>
+      <div class="hero-badge fade-in fade-in-1">
+        <div class="hero-badge-dot"></div>
+        פלטפורמת חדרי הבריחה המובילה 🚀
       </div>
-
-      <div class="hero-stats">
-        <div>
-          <div class="hero-stat-val">10K+</div>
-          <div class="hero-stat-label">פרויקטים נוצרו</div>
-        </div>
-        <div>
-          <div class="hero-stat-val">50K+</div>
-          <div class="hero-stat-label">שחקנים פעילים</div>
-        </div>
-        <div>
-          <div class="hero-stat-val">99%</div>
-          <div class="hero-stat-label">שביעות רצון</div>
-        </div>
+      <h1 class="hero-title fade-in fade-in-2">
+        צור חדרי בריחה<br>דיגיטליים אפיים
+      </h1>
+      <p class="hero-subtitle fade-in fade-in-3">
+        בנה חידות מרתקות, חדרי בריחה אינטראקטיביים, ושאלונים תחרותיים.
+        שתף עם חברים, עמיתים ותלמידים — בשניות.
+      </p>
+      <div class="hero-btns fade-in fade-in-4">
+        <button class="btn-primary" onclick="showPage('auth')">🚀 התחל ליצור — חינם</button>
+        <button class="btn-secondary" onclick="scrollTo(0,800)">▶ ראה איך זה עובד</button>
+      </div>
+      <div class="hero-stats fade-in fade-in-4">
+        <div class="stat"><div class="stat-num">50K+</div><div class="stat-label">משתמשים פעילים</div></div>
+        <div class="stat"><div class="stat-num">200K+</div><div class="stat-label">פרויקטים נוצרו</div></div>
+        <div class="stat"><div class="stat-num">4.9★</div><div class="stat-label">דירוג ממוצע</div></div>
+        <div class="stat"><div class="stat-num">99.9%</div><div class="stat-label">זמן פעילות</div></div>
       </div>
     </div>
   </section>
 
   <!-- FEATURES -->
-  <section class="section" id="features">
-    <div class="container">
-      <div class="hero-eyebrow" style="display:inline-flex;margin-bottom:16px;">✦ יכולות המערכת</div>
-      <h2 class="section-title">הכל במקום אחד</h2>
-      <p class="section-sub">מחידון פשוט ועד חדר בריחה מלא – המערכת שלנו מכסה הכל</p>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <span class="feature-icon">🗺️</span>
-          <div class="feature-title">מפות אינטראקטיביות</div>
-          <div class="feature-desc">צור מפות חדרי בריחה ויזואליות עם נקודות, דלתות ומסלולים. כל שאלה היא חדר.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">⚡</span>
-          <div class="feature-title">מצבי משחק מתקדמים</div>
-          <div class="feature-desc">טיימר, קומבו, נקודות אקראיות, חנות פריטים, חבלה ביריב ועוד מצבי משחק ייחודיים.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🤖</span>
-          <div class="feature-title">יצירה עם AI</div>
-          <div class="feature-desc">ספר לAI על הנושא ותקבל שאלות מוכנות בשניות. מגביל לסוג החשבון שלך.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🏆</span>
-          <div class="feature-title">ליגות ודרגות</div>
-          <div class="feature-desc">מ-Noob ועד God Mode – עלה בדרגה, קבל תארים מיוחדים ותתחרה בלוחות תוצאות.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">🎨</span>
-          <div class="feature-title">עיצובי ธีム</div>
-          <div class="feature-desc">בחר מתוך תמות: Cyberpunk, מעבדה מדעית, כלא, טירה ועוד. עצב את חוויית המשחק.</div>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon">📤</span>
-          <div class="feature-title">שיתוף גמיש</div>
-          <div class="feature-desc">קישור ציבורי, QR Code, הטמעה באתרים חיצוניים ואפילו דומיין מותאם אישית.</div>
-        </div>
+  <div class="section">
+    <div class="section-tag">יכולות</div>
+    <h2 class="section-title">כל מה שצריך<br>ליצור חוויה בלתי נשכחת</h2>
+    <p class="section-sub">כלים מקצועיים, עיצוב מרשים ומכניקות משחק מתקדמות — הכל במקום אחד.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-title">מפת חדר בריחה</div>
+        <div class="feature-desc">צור מפה אינטראקטיבית עם חדרים, חידות וקישורים. כל שאלה נכונה פותחת דלת לחדר הבא.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">מודים תחרותיים</div>
+        <div class="feature-desc">טיימר, רצף תשובות, מצב כדורים נופלים, חנות מטבעות, ומוד כדורים — מגוון מכניקות למשחק מרגש.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">יצירה עם AI</div>
+        <div class="feature-desc">תן ל-AI לייצר שאלות, חידות ותכנים. חסוך זמן ויצירתיות — ה-AI יעשה את העבודה הכבדה.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">סטטיסטיקות XP</div>
+        <div class="feature-desc">מערכת XP, תארים, רצף יומי, לוחות תוצאות בזמן אמת ופרסים. כל שחקן מרגיש מנצח.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">ערכות נושא מרהיבות</div>
+        <div class="feature-desc">מוד סייבר, מעבדה, בריחה מהכלא ועוד. עיצוב ייחודי לכל חדר שיוצר אווירה אמיתית.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">שיחק בזמן אמת</div>
+        <div class="feature-desc">לובי חי, מצב צוות, מצב תחרות — עד אינסוף שחקנים בו-זמנית עם סנכרון מלא דרך Firebase.</div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- ESCAPE PREVIEW -->
-  <section class="section" style="background:rgba(0,212,255,0.02);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
-    <div class="container">
-      <div class="hero-eyebrow" style="display:inline-flex;margin-bottom:16px;">✦ דמו חי</div>
-      <h2 class="section-title">חדר בריחה בפעולה</h2>
-      <div class="escape-preview">
-        <div>
-          <p class="section-sub" style="margin-bottom:24px;">
-            שחקנים רואים מפה ויזואלית. כל שאלה נכונה פותחת דלת לחדר הבא.
-            טעות גורמת לאפקט ויזואלי ייחודי לפי הθέma שבחרת.
-          </p>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
-              <span style="color:var(--green);">✓</span> שאלות אמריקאיות, אמת/שקר, סידור, הקלדה
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
-              <span style="color:var(--green);">✓</span> מד קומבו לצד המסך עם מכפיל נקודות עד X2
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
-              <span style="color:var(--green);">✓</span> חנות פריטים: רמזים, הקפאה, פריצה ליריב
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
-              <span style="color:var(--green);">✓</span> תוצאות ודירוג לאחר סיום
-            </div>
-          </div>
-          <button class="btn btn-primary" style="margin-top:28px;" onclick="showPage('auth')">נסה עכשיו בחינם →</button>
-        </div>
-        <div class="escape-map">
-          <div class="escape-map-grid" id="demo-map"></div>
-        </div>
+  <!-- THEMES -->
+  <div class="section" style="padding-top:0">
+    <div class="section-tag">ערכות נושא</div>
+    <h2 class="section-title">בחר את העולם שלך</h2>
+    <p class="section-sub">כל ערכת נושא מגיעה עם אפקטים חזותיים, צלילים ואנימציות ייחודיות.</p>
+    <div class="themes-grid">
+      <div class="theme-card theme-cyber">
+        <div class="theme-label">🔐 CYBER MODE</div>
+        <div class="theme-name">מצב הסייבר</div>
+        <div class="theme-desc">כל האתר נראה כאילו נפרץ. טעות? המסך "מרצד" באפקט גליץ' מרשים.</div>
+        <div class="theme-effect">⚡ Glitch Effect</div>
+      </div>
+      <div class="theme-card theme-lab">
+        <div class="theme-label">🧪 LAB MODE</div>
+        <div class="theme-name">מוד המעבדה</div>
+        <div class="theme-desc">השאלות הן ניסויים. טעות? המבחנה מתפוצצת ועשן מסתיר את השאלה ל-3 שניות.</div>
+        <div class="theme-effect">💥 Explosion Effect</div>
+      </div>
+      <div class="theme-card theme-prison">
+        <div class="theme-label">🔒 PRISON MODE</div>
+        <div class="theme-name">בריחה מהכלא</div>
+        <div class="theme-desc">כל תשובה נכונה = שלב בפריצה. איטי מדי? "הסוהרים" (הטיימר) תופסים אותך.</div>
+        <div class="theme-effect">⏱️ Pressure Timer</div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- PRICING -->
-  <section class="section" id="pricing">
-    <div class="container">
-      <div class="hero-eyebrow" style="display:inline-flex;margin-bottom:16px;">✦ תוכניות מחיר</div>
-      <h2 class="section-title">בחר את התוכנית שלך</h2>
-      <p class="section-sub">התחל בחינם, שדרג כשאתה צומח</p>
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <div class="pricing-name">רגיל</div>
-          <div class="pricing-price">$0<span>/חודש</span></div>
-          <div class="pricing-features">
-            <div class="pricing-feature">עד 5 פרויקטים</div>
-            <div class="pricing-feature">15 שאלות לפרויקט</div>
-            <div class="pricing-feature">15 משתתפים</div>
-            <div class="pricing-feature">קישור ציבורי</div>
-            <div class="pricing-feature">תמיכת קהילה</div>
-          </div>
-          <button class="btn btn-outline" style="width:100%;margin-top:24px;justify-content:center;" onclick="showPage('auth')">התחל עכשיו</button>
-        </div>
-        <div class="pricing-card featured">
-          <div class="pricing-name">פרו</div>
-          <div class="pricing-price">$7.99<span>/חודש</span></div>
-          <div class="pricing-features">
-            <div class="pricing-feature">עד 10 פרויקטים</div>
-            <div class="pricing-feature">25 שאלות לפרויקט</div>
-            <div class="pricing-feature">40 משתתפים</div>
-            <div class="pricing-feature">QR + קישור ציבורי</div>
-            <div class="pricing-feature">AI: עד 2 פרויקטים</div>
-            <div class="pricing-feature">עד 5 אפקטים קוליים</div>
-          </div>
-          <button class="btn btn-primary" style="width:100%;margin-top:24px;justify-content:center;" onclick="showPage('auth')">בחר פרו</button>
-        </div>
-        <div class="pricing-card">
-          <div class="pricing-name">אולטרה</div>
-          <div class="pricing-price">$13.99<span>/חודש</span></div>
-          <div class="pricing-features">
-            <div class="pricing-feature">פרויקטים ללא הגבלה</div>
-            <div class="pricing-feature">שאלות ללא הגבלה</div>
-            <div class="pricing-feature">משתתפים ללא הגבלה</div>
-            <div class="pricing-feature">הטמעה באתרים</div>
-            <div class="pricing-feature">AI: עד 5 פרויקטים</div>
-            <div class="pricing-feature">עד 15 אפקטים קוליים</div>
-          </div>
-          <button class="btn btn-outline" style="width:100%;margin-top:24px;justify-content:center;" onclick="showPage('auth')">בחר אולטרה</button>
-        </div>
-        <div class="pricing-card">
-          <div class="pricing-name">עסקי</div>
-          <div class="pricing-price">$17.99<span>/חודש</span></div>
-          <div class="pricing-features">
-            <div class="pricing-feature">הכל ב-אולטרה</div>
-            <div class="pricing-feature">דומיין מותאם אישית</div>
-            <div class="pricing-feature">AI ללא הגבלה</div>
-            <div class="pricing-feature">50 אפקטים קוליים</div>
-            <div class="pricing-feature">תמיכה עדיפות גבוהה</div>
-          </div>
-          <button class="btn btn-outline" style="width:100%;margin-top:24px;justify-content:center;" onclick="showPage('auth')">בחר עסקי</button>
-        </div>
+  <!-- HOW IT WORKS -->
+  <div class="section" style="padding-top:0">
+    <div class="section-tag">איך זה עובד</div>
+    <h2 class="section-title">שלושה שלבים לחוויה אפית</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px;margin-top:50px">
+      <div style="text-align:center;padding:30px 20px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--gradient-btn);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:900;font-size:1.4rem;margin:0 auto 20px;box-shadow:0 0 30px rgba(0,229,255,0.3)">1</div>
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:10px">צור פרויקט</h3>
+        <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.6">בחר בין חידון לחדר בריחה, הוסף שאלות וחידות, בחר ערכת נושא ומכניקות משחק.</p>
+      </div>
+      <div style="text-align:center;padding:30px 20px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--gradient-btn);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:900;font-size:1.4rem;margin:0 auto 20px;box-shadow:0 0 30px rgba(0,229,255,0.3)">2</div>
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:10px">שתף בקלות</h3>
+        <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.6">שלח קישור, QR Code או קוד 6 ספרות. הצוות נכנס מכל מכשיר — ללא הורדת אפליקציה.</p>
+      </div>
+      <div style="text-align:center;padding:30px 20px">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--gradient-btn);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-weight:900;font-size:1.4rem;margin:0 auto 20px;box-shadow:0 0 30px rgba(0,229,255,0.3)">3</div>
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:10px">שחק ונצח!</h3>
+        <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.6">תחרות בזמן אמת, לוח ניקוד חי, XP ותארים. כל משחק הוא חוויה בלתי נשכחת.</p>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- FOOTER -->
-  <footer style="border-top:1px solid var(--border);padding:40px 24px;text-align:center;">
-    <div class="nav-logo" style="display:inline-block;font-size:24px;margin-bottom:12px;">
-      <span class="c1" style="color:var(--cyan);">ESCAPE</span><span class="c2" style="color:var(--pink);">IQ</span>
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="section-tag" style="margin-bottom:20px">מוכן?</div>
+    <h2 class="section-title">התחל ליצור חדרי בריחה<br>מדהימים היום</h2>
+    <p class="section-sub">שבועיים ראשונים חינם לגמרי. ללא כרטיס אשראי.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-primary" onclick="showPage('auth')">🚀 צור חשבון חינמי</button>
+      <button class="btn-secondary" onclick="showPage('pricing')">💡 ראה תמחור</button>
     </div>
-    <p style="font-size:13px;color:var(--muted);">© 2025 EscapeIQ. כל הזכויות שמורות.</p>
+  </div>
+
+  <footer>
+    <div class="footer-logo">ESCAPE<span style="color:var(--cyan)">IQ</span></div>
+    <div class="footer-links">
+      <span class="footer-link">אודות</span>
+      <span class="footer-link">תנאי שימוש</span>
+      <span class="footer-link">פרטיות</span>
+      <span class="footer-link">צור קשר</span>
+      <span class="footer-link">Discord</span>
+    </div>
+    <div class="footer-copy">© 2025 EscapeIQ. כל הזכויות שמורות.</div>
   </footer>
 </div>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!--  PAGE: AUTH                                     -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="page" id="page-auth">
-  <div class="auth-glow"></div>
-  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:80px 24px;">
-    <div class="auth-card">
-      <div style="text-align:center;margin-bottom:32px;">
-        <div class="nav-logo" style="font-size:28px;display:inline-block;margin-bottom:8px;">
-          <span style="color:var(--cyan);">ESCAPE</span><span style="color:var(--pink);">IQ</span>
-        </div>
-        <div style="font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;">פלטפורמת חדרי הבריחה</div>
-      </div>
+<!-- ===================== AUTH PAGE ===================== -->
+<div id="page-auth" class="page">
+  <div class="auth-page">
+    <div class="auth-bg"></div>
+    <div class="auth-container">
 
-      <div class="auth-inner">
-        <!-- TABS -->
+      <!-- Register Card -->
+      <div class="auth-card" id="register-card">
         <div class="auth-tabs">
-          <div class="auth-tab active" onclick="switchAuthTab('login')">כניסה</div>
-          <div class="auth-tab" onclick="switchAuthTab('register')">הרשמה</div>
+          <div class="auth-tab active" onclick="switchTab(this,'register')">הרשמה</div>
+          <div class="auth-tab" onclick="switchTab(this,'login')">כניסה</div>
         </div>
-
-        <!-- LOGIN FORM -->
-        <div class="auth-form active" id="auth-login">
-          <h2 class="auth-title">ברוך הבא בחזרה!</h2>
-          <p class="auth-sub">התחבר כדי לגשת לפרויקטים שלך</p>
-
-          <button class="google-btn" onclick="handleGoogleLogin()">
-            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/></svg>
-            המשך עם Google
-          </button>
-          <div class="auth-divider"><span>או</span></div>
-
-          <div class="form-group">
-            <label>אימייל</label>
-            <input type="email" id="login-email" placeholder="your@email.com" dir="ltr"/>
-          </div>
-          <div class="form-group">
-            <label>סיסמה</label>
-            <input type="password" id="login-pass" placeholder="••••••••" dir="ltr"/>
-          </div>
-          <button class="btn btn-primary auth-submit" onclick="handleEmailLogin()">⚡ כניסה</button>
-        </div>
-
-        <!-- REGISTER FORM -->
-        <div class="auth-form" id="auth-register">
-          <h2 class="auth-title">יצירת חשבון</h2>
-          <p class="auth-sub">הצטרף לאלפי יוצרים ושחקנים</p>
-
-          <button class="google-btn" onclick="handleGoogleLogin()">
-            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/></svg>
-            הרשמה עם Google
-          </button>
-          <div class="auth-divider"><span>או</span></div>
-
+        <div id="register-form">
+          <div class="auth-title">יצירת חשבון 🚀</div>
+          <div class="auth-sub">הצטרף לאלפי יוצרים ושחקנים</div>
+          <button class="btn-google"><div class="google-icon"></div> הרשמה עם Google</button>
+          <div class="divider">או</div>
           <div class="form-row">
             <div class="form-group">
-              <label>שם פרטי</label>
-              <input type="text" id="reg-fname" placeholder="ישראל"/>
+              <label class="form-label">שם פרטי</label>
+              <input type="text" class="form-input" placeholder="ישראל">
             </div>
             <div class="form-group">
-              <label>שם משפחה</label>
-              <input type="text" id="reg-lname" placeholder="ישראלי"/>
+              <label class="form-label">שם משפחה</label>
+              <input type="text" class="form-input" placeholder="ישראלי">
             </div>
           </div>
           <div class="form-group">
-            <label>שם משתמש</label>
-            <input type="text" id="reg-username" placeholder="hacker99" dir="ltr"/>
+            <label class="form-label">שם משתמש</label>
+            <input type="text" class="form-input" placeholder="hacker99">
           </div>
           <div class="form-group">
-            <label>אימייל</label>
-            <input type="email" id="reg-email" placeholder="your@email.com" dir="ltr"/>
+            <label class="form-label">אימייל</label>
+            <input type="email" class="form-input" placeholder="your@email.com">
           </div>
           <div class="form-group">
-            <label>סיסמה</label>
-            <input type="password" id="reg-pass" placeholder="לפחות 6 תווים" dir="ltr"/>
+            <label class="form-label">סיסמה</label>
+            <input type="password" class="form-input" placeholder="לפחות 6 תווים">
+            <div class="pw-hint">לפחות 6 תווים</div>
           </div>
-          <button class="btn btn-primary auth-submit" onclick="handleEmailRegister()">🚀 צור חשבון</button>
+          <button class="btn-submit" onclick="showVerify()">צור חשבון 🚀</button>
         </div>
-
-        <!-- OTP FORM (hidden by default) -->
-        <div class="auth-form" id="auth-otp">
-          <h2 class="auth-title">אימות חשבון</h2>
-          <p class="auth-sub">שלחנו קוד 6 ספרות לאימייל שלך. הזן אותו למטה.</p>
-          <div class="otp-grid" id="otp-grid">
-            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"/>
-            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"/>
-            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"/>
-            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"/>
-            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"/>
-            <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]"/>
+        <div id="login-form" style="display:none">
+          <div class="auth-title">ברוך הבא בחזרה! ⚡</div>
+          <div class="auth-sub">התחבר כדי לגשת לפרויקטים שלך</div>
+          <button class="btn-google"><div class="google-icon"></div> המשך עם Google</button>
+          <div class="divider">או</div>
+          <div class="form-group">
+            <label class="form-label">אימייל</label>
+            <input type="email" class="form-input" placeholder="your@email.com">
           </div>
-          <p style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px;" id="otp-timer">
-            ⏱ הקוד תקף ל-10 דקות
-          </p>
-          <button class="btn btn-primary auth-submit" onclick="handleOTPVerify()">✓ אמת חשבון</button>
-          <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px;" onclick="resendOTP()">שלח שוב</button>
+          <div class="form-group">
+            <label class="form-label">סיסמה</label>
+            <input type="password" class="form-input" placeholder="••••••">
+          </div>
+          <button class="btn-submit">כניסה ⚡</button>
+          <span class="forgot">שכחת סיסמה?</span>
         </div>
       </div>
+
+      <!-- Verify Card -->
+      <div class="verify-box active" id="verify-card" style="display:none">
+        <div class="verify-icon">📧</div>
+        <div class="verify-title">בדוק את האימייל שלך</div>
+        <div class="verify-sub">שלחנו קוד אימות בן 6 ספרות לכתובת האימייל שהזנת</div>
+        <div class="code-inputs">
+          <input class="code-input" maxlength="1" oninput="moveNext(this)">
+          <input class="code-input" maxlength="1" oninput="moveNext(this)">
+          <input class="code-input" maxlength="1" oninput="moveNext(this)">
+          <input class="code-input" maxlength="1" oninput="moveNext(this)">
+          <input class="code-input" maxlength="1" oninput="moveNext(this)">
+          <input class="code-input" maxlength="1" oninput="moveNext(this)">
+        </div>
+        <button class="btn-submit" style="margin-bottom:16px">אמת קוד ✅</button>
+        <div class="resend">לא קיבלת? <span onclick="resendCode()">שלח שוב</span></div>
+      </div>
+
+      <!-- Info panel -->
+      <div style="display:flex;flex-direction:column;justify-content:center;padding:20px;gap:24px">
+        <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:20px">
+          <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px">🎉 שבועיים חינם!</div>
+          <div style="font-size:0.88rem;color:var(--text-muted);line-height:1.6">הרשמה עכשיו ותקבל גישה מלאה לכל הפיצ'רים למשך 14 יום ללא עלות.</div>
+        </div>
+        <div style="background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);border-radius:14px;padding:20px">
+          <div style="font-size:1rem;font-weight:600;margin-bottom:10px;color:var(--cyan)">✨ מה מחכה לך:</div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li style="font-size:0.88rem;color:var(--text-muted);display:flex;gap:8px;align-items:center"><span style="color:var(--green)">✓</span> 5 פרויקטים חינמיים</li>
+            <li style="font-size:0.88rem;color:var(--text-muted);display:flex;gap:8px;align-items:center"><span style="color:var(--green)">✓</span> כל סוגי השאלות</li>
+            <li style="font-size:0.88rem;color:var(--text-muted);display:flex;gap:8px;align-items:center"><span style="color:var(--green)">✓</span> שיתוף עם קישור ציבורי</li>
+            <li style="font-size:0.88rem;color:var(--text-muted);display:flex;gap:8px;align-items:center"><span style="color:var(--green)">✓</span> מערכת XP ותארים</li>
+          </ul>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!--  PAGE: DASHBOARD                               -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="page" id="page-dashboard">
-  <div class="dashboard-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar" id="sidebar-avatar">?</div>
-        <div class="sidebar-name" id="sidebar-name">טוען...</div>
-        <div class="sidebar-rank" id="sidebar-rank">
-          <span class="rank-badge rank-noob">🎮 Noob</span>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="sidebar-link active" onclick="showDashTab('projects')" id="tab-projects">
-          <span class="sidebar-link-icon">🏠</span> הפרויקטים שלי
-        </div>
-        <div class="sidebar-link" onclick="showDashTab('stats')" id="tab-stats">
-          <span class="sidebar-link-icon">📊</span> סטטיסטיקות
-        </div>
-        <div class="sidebar-link" onclick="showDashTab('profile')" id="tab-profile">
-          <span class="sidebar-link-icon">👤</span> פרופיל
-        </div>
-        <div class="sidebar-link" onclick="showDashTab('upgrade')" id="tab-upgrade">
-          <span class="sidebar-link-icon">⚡</span> שדרג תוכנית
-        </div>
-      </nav>
-      <div class="sidebar-bottom">
-        <div class="sidebar-link" onclick="handleLogout()">
-          <span class="sidebar-link-icon">🚪</span> התנתק
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main content -->
-    <main class="dashboard-main">
-      <!-- PROJECTS TAB -->
-      <div id="dash-projects">
-        <div class="dash-header">
-          <h1 class="dash-title">הפרויקטים שלי</h1>
-          <p class="dash-sub">צור וניהל את החידונים וחדרי הבריחה שלך</p>
-        </div>
-
-        <!-- XP bar -->
-        <div class="stat-card" style="margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-          <div>
-            <div class="stat-val" id="dash-xp">0</div>
-            <div class="stat-label">נקודות XP</div>
-          </div>
-          <div style="flex:1;min-width:200px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-              <span style="font-size:12px;color:var(--muted);">Noob</span>
-              <span style="font-size:12px;color:var(--muted);">Hacker (1000 XP)</span>
-            </div>
-            <div class="xp-bar"><div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div></div>
-          </div>
-          <div>
-            <div class="stat-val" id="dash-streak">0🔥</div>
-            <div class="stat-label">רצף יומי</div>
-          </div>
-        </div>
-
-        <!-- Projects -->
-        <div class="projects-grid" id="projects-grid">
-          <div class="new-project-card" onclick="openNewProjectModal()">
-            <div class="new-project-icon">+</div>
-            <div class="new-project-label">פרויקט חדש</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- STATS TAB -->
-      <div id="dash-stats" style="display:none;">
-        <div class="dash-header">
-          <h1 class="dash-title">הסטטיסטיקות שלי</h1>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-val" id="stat-projects">0</div>
-            <div class="stat-label">פרויקטים</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="stat-xp">0</div>
-            <div class="stat-label">סה"כ XP</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="stat-streak">0</div>
-            <div class="stat-label">רצף ימים</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="stat-rank">Noob</div>
-            <div class="stat-label">דרגה</div>
-          </div>
-        </div>
-        <div class="stat-card" style="margin-top:20px;padding:24px;">
-          <h3 style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:20px;color:var(--muted);">מסע הדרגות</h3>
-          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-            <div style="text-align:center;">
-              <div class="rank-badge rank-noob">🎮 Noob</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:6px;">0 XP</div>
-            </div>
-            <div style="color:var(--border);font-size:20px;">→</div>
-            <div style="text-align:center;">
-              <div class="rank-badge rank-hacker">💻 Hacker</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:6px;">1,000 XP</div>
-            </div>
-            <div style="color:var(--border);font-size:20px;">→</div>
-            <div style="text-align:center;">
-              <div class="rank-badge rank-god">👑 God Mode</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:6px;">5,000 XP</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PROFILE TAB -->
-      <div id="dash-profile" style="display:none;">
-        <div class="dash-header">
-          <h1 class="dash-title">הפרופיל שלי</h1>
-        </div>
-        <div class="profile-grid">
-          <div class="profile-card" style="text-align:center;">
-            <div class="profile-avatar-big" id="profile-avatar-big">?</div>
-            <div class="profile-name-big" id="profile-name-big">—</div>
-            <div class="profile-email" id="profile-email-disp">—</div>
-            <div id="profile-rank-badge" style="display:flex;justify-content:center;margin-bottom:16px;">
-              <span class="rank-badge rank-noob">🎮 Noob</span>
-            </div>
-            <div class="plan-upgrade" onclick="showDashTab('upgrade')">⚡ שדרג לפרו</div>
-          </div>
-          <div>
-            <div class="profile-card" style="margin-bottom:20px;">
-              <h3 style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:20px;">עדכן פרטים</h3>
-              <div class="form-group">
-                <label>שם תצוגה</label>
-                <input type="text" id="profile-display-name" placeholder="השם שלך"/>
-              </div>
-              <div class="form-group">
-                <label>שם משתמש</label>
-                <input type="text" id="profile-username" placeholder="username" dir="ltr"/>
-              </div>
-              <button class="btn btn-primary" onclick="saveProfile()">💾 שמור שינויים</button>
-            </div>
-            <div class="profile-card">
-              <h3 style="font-family:var(--font-display);font-size:13px;letter-spacing:1px;color:var(--muted);margin-bottom:20px;">אבטחה</h3>
-              <div class="form-group">
-                <label>סיסמה חדשה</label>
-                <input type="password" placeholder="••••••••" id="new-password" dir="ltr"/>
-              </div>
-              <button class="btn btn-outline" onclick="changePassword()">🔒 עדכן סיסמה</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- UPGRADE TAB -->
-      <div id="dash-upgrade" style="display:none;">
-        <div class="dash-header">
-          <h1 class="dash-title">שדרג את החשבון</h1>
-          <p class="dash-sub">בחר תוכנית שמתאימה לצרכים שלך</p>
-        </div>
-        <div class="pricing-grid">
-          <div class="pricing-card" id="plan-free">
-            <div class="pricing-name">רגיל</div>
-            <div class="pricing-price">$0<span>/חודש</span></div>
-            <div class="pricing-features">
-              <div class="pricing-feature">5 פרויקטים</div>
-              <div class="pricing-feature">15 שאלות</div>
-              <div class="pricing-feature">15 משתתפים</div>
-            </div>
-            <button class="btn btn-ghost" style="width:100%;margin-top:24px;justify-content:center;" disabled>תוכנית נוכחית</button>
-          </div>
-          <div class="pricing-card featured">
-            <div class="pricing-name">פרו</div>
-            <div class="pricing-price">$7.99<span>/חודש</span></div>
-            <div class="pricing-features">
-              <div class="pricing-feature">10 פרויקטים</div>
-              <div class="pricing-feature">25 שאלות</div>
-              <div class="pricing-feature">40 משתתפים</div>
-              <div class="pricing-feature">AI ליצירה</div>
-            </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:24px;justify-content:center;" onclick="upgradePlan('pro')">⚡ שדרג לפרו</button>
-          </div>
-          <div class="pricing-card">
-            <div class="pricing-name">אולטרה</div>
-            <div class="pricing-price">$13.99<span>/חודש</span></div>
-            <div class="pricing-features">
-              <div class="pricing-feature">ללא הגבלה</div>
-              <div class="pricing-feature">הטמעה בחיצוני</div>
-              <div class="pricing-feature">AI: 5 פרויקטים</div>
-            </div>
-            <button class="btn btn-outline" style="width:100%;margin-top:24px;justify-content:center;" onclick="upgradePlan('ultra')">שדרג לאולטרה</button>
-          </div>
-          <div class="pricing-card">
-            <div class="pricing-name">עסקי</div>
-            <div class="pricing-price">$17.99<span>/חודש</span></div>
-            <div class="pricing-features">
-              <div class="pricing-feature">הכל כלול</div>
-              <div class="pricing-feature">דומיין מותאם</div>
-              <div class="pricing-feature">תמיכה VIP</div>
-            </div>
-            <button class="btn btn-outline" style="width:100%;margin-top:24px;justify-content:center;" onclick="upgradePlan('business')">שדרג לעסקי</button>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════ -->
-<!--  PAGE: CREATOR (Quiz)                          -->
-<!-- ═══════════════════════════════════════════════ -->
-<div class="page" id="page-creator">
-  <div class="creator-layout">
-    <!-- Slides panel -->
-    <div class="slides-panel" id="slides-panel">
-      <!-- Dynamically filled -->
-    </div>
-
-    <!-- Editor area -->
-    <div class="editor-area">
-      <div class="editor-toolbar">
-        <button class="toolbar-btn" onclick="addQuestion('american')">➕ אמריקאי</button>
-        <button class="toolbar-btn" onclick="addQuestion('truefalse')">✅ אמת/שקר</button>
-        <button class="toolbar-btn" onclick="addQuestion('typing')">⌨️ הקלדה</button>
-        <button class="toolbar-btn" onclick="addQuestion('order')">🔀 סידור</button>
-        <div class="toolbar-sep"></div>
-        <button class="toolbar-btn" onclick="saveProject()">💾 שמור</button>
-        <button class="toolbar-btn" onclick="previewProject()">👁️ תצוגה מקדימה</button>
-        <div class="toolbar-sep"></div>
-        <button class="toolbar-btn" onclick="showPage('dashboard')">← חזור</button>
-        <div class="toolbar-title" id="creator-project-name">פרויקט חדש</div>
-      </div>
-      <div class="editor-canvas" id="editor-canvas">
-        <div style="text-align:center;padding:60px 20px;color:var(--muted);">
-          <div style="font-size:48px;margin-bottom:16px;">✏️</div>
-          <div style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:8px;">אין שאלות עדיין</div>
-          <div style="font-size:13px;">לחץ על אחד הכפתורים למעלה כדי להוסיף שאלה ראשונה</div>
+<!-- ===================== PRICING PAGE ===================== -->
+<div id="page-pricing" class="page">
+  <div class="pricing-page">
+    <div class="pricing-hero">
+      <div class="section-tag">תמחור</div>
+      <h1 class="section-title" style="margin-top:16px">בחר את התוכנית שלך</h1>
+      <p style="color:var(--text-muted);font-size:1.05rem;max-width:500px;margin:0 auto 36px;line-height:1.7">תמחור פשוט, שקוף ומשתלם. שדרג או שנמך בכל עת.</p>
+      <div class="trial-banner">
+        <div class="trial-icon">🎁</div>
+        <div class="trial-text">
+          <strong>שבועיים ראשונים — הכל חינם!</strong>
+          <span>בדיקת מכשיר אחד בלבד • ללא כרטיס אשראי</span>
         </div>
       </div>
     </div>
 
-    <!-- Settings panel -->
-    <div class="creator-right">
-      <h3>הגדרות פרויקט</h3>
-      <div class="setting-row">
-        <label>שם הפרויקט</label>
-        <input type="text" id="project-name-input" placeholder="החידון שלי"/>
+    <div class="pricing-grid">
+      <!-- FREE -->
+      <div class="pricing-card">
+        <div class="pricing-tier">רגיל</div>
+        <div class="pricing-price"><sup>$</sup>0</div>
+        <div class="pricing-period">לחודש</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> עד 5 פרויקטים</li>
+          <li><span class="check">✓</span> 15 שאלות לפרויקט</li>
+          <li><span class="check">✓</span> 15 משתתפים</li>
+          <li><span class="check">✓</span> קישור ציבורי</li>
+          <li><span class="check">✓</span> תמיכת קהילה</li>
+          <li><span class="check">✓</span> מוד רגיל בלבד</li>
+          <li><span class="check">✓</span> עיצוב סטנדרטי</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-outline" onclick="showPage('auth')">התחל עכשיו</button>
       </div>
-      <div class="setting-row">
-        <label>סוג</label>
-        <select id="project-type">
-          <option value="quiz">חידון</option>
-          <option value="escape">חדר בריחה</option>
-        </select>
-      </div>
-      <div style="height:1px;background:var(--border);margin:20px 0;"></div>
-      <h3>מצבי משחק</h3>
-      <div class="toggle-row">
-        <span class="toggle-label">⏱ טיימר לשאלות</span>
-        <div class="toggle" id="toggle-timer" onclick="toggleSetting('timer')"></div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">🔥 מד קומבו</span>
-        <div class="toggle" id="toggle-combo" onclick="toggleSetting('combo')"></div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">🎲 נקודות אקראיות</span>
-        <div class="toggle" id="toggle-random" onclick="toggleSetting('random')"></div>
-      </div>
-      <div class="toggle-row">
-        <span class="toggle-label">🏪 חנות פריטים</span>
-        <div class="toggle" id="toggle-shop" onclick="toggleSetting('shop')"></div>
-      </div>
-      <div style="height:1px;background:var(--border);margin:20px 0;"></div>
-      <h3>θέma עיצובי</h3>
-      <div class="setting-row">
-        <select id="theme-select">
-          <option value="cyber">🌐 Cyberpunk</option>
-          <option value="lab">🧪 מעבדה</option>
-          <option value="prison">🔒 כלא</option>
-          <option value="castle">🏰 טירה</option>
-        </select>
-      </div>
-      <div style="margin-top:20px;">
-        <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="saveProject()">💾 שמור פרויקט</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════ -->
-<!--  MODALS                                         -->
-<!-- ═══════════════════════════════════════════════ -->
-
-<!-- New Project Modal -->
-<div class="modal-overlay" id="modal-new-project">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-new-project')">✕</button>
-    <div class="modal-title">פרויקט חדש</div>
-    <div class="modal-sub">בחר מה ברצונך ליצור</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="feature-card" style="cursor:pointer;text-align:center;" onclick="startCreateProject('quiz')">
-        <span class="feature-icon">🧠</span>
-        <div class="feature-title">חידון</div>
-        <div class="feature-desc" style="font-size:12px;">שאלות ותשובות אינטראקטיביות</div>
+      <!-- PRO -->
+      <div class="pricing-card popular">
+        <div class="popular-badge">🔥 הכי פופולרי</div>
+        <div class="pricing-tier" style="margin-top:20px">פרו</div>
+        <div class="pricing-price" style="background:var(--gradient-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent"><sup>$</sup>7.99</div>
+        <div class="pricing-period">לחודש</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> פרויקטים ללא הגבלה</li>
+          <li><span class="check">✓</span> 25 שאלות לפרויקט</li>
+          <li><span class="check">✓</span> משתתפים ללא הגבלה*</li>
+          <li><span class="check">✓</span> QR + קישור ציבורי</li>
+          <li><span class="check">✓</span> תמיכה עדיפות נמוכה</li>
+          <li><span class="check">✓</span> מוד על זמן</li>
+          <li><span class="check">✓</span> AI: עד 2 פרויקטים</li>
+          <li><span class="check">✓</span> עד 5 אפקטים קוליים</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-primary" onclick="showPage('auth')">בחר פרו</button>
       </div>
-      <div class="feature-card" style="cursor:pointer;text-align:center;" onclick="startCreateProject('escape')">
-        <span class="feature-icon">🗝️</span>
-        <div class="feature-title">חדר בריחה</div>
-        <div class="feature-desc" style="font-size:12px;">מפה ואתגרים רצופים</div>
+
+      <!-- ULTRA -->
+      <div class="pricing-card">
+        <div class="pricing-tier">אולטרה</div>
+        <div class="pricing-price" style="color:var(--purple)"><sup>$</sup>13.99</div>
+        <div class="pricing-period">לחודש</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> הכל בפרו</li>
+          <li><span class="check">✓</span> שאלות ללא הגבלה</li>
+          <li><span class="check">✓</span> הטמעה באתרים</li>
+          <li><span class="check">✓</span> מוד רצף + כדורים</li>
+          <li><span class="check">✓</span> AI: עד 5 פרויקטים</li>
+          <li><span class="check">✓</span> עד 15 אפקטים קוליים</li>
+          <li><span class="check">✓</span> עיצוב מותאם אישית</li>
+          <li><span class="check">✓</span> תמיכה עדיפות בינונית</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-outline" style="border-color:var(--purple);color:var(--purple)" onclick="showPage('auth')">בחר אולטרה</button>
+      </div>
+
+      <!-- BUSINESS -->
+      <div class="pricing-card">
+        <div class="pricing-tier">עסקי</div>
+        <div class="pricing-price" style="color:var(--pink)"><sup>$</sup>17.99</div>
+        <div class="pricing-period">לחודש</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> הכל באולטרה</li>
+          <li><span class="check">✓</span> דומיין מותאם אישית</li>
+          <li><span class="check">✓</span> White Label</li>
+          <li><span class="check">✓</span> AI ללא הגבלה</li>
+          <li><span class="check">✓</span> 50 אפקטים קוליים</li>
+          <li><span class="check">✓</span> עלה תמונה לעיצוב</li>
+          <li><span class="check">✓</span> כל המודים</li>
+          <li><span class="check">✓</span> תמיכה עדיפות גבוהה</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-dark" onclick="showPage('auth')">בחר עסקי</button>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Delete Confirm Modal -->
-<div class="modal-overlay" id="modal-confirm-delete">
-  <div class="modal" style="max-width:360px;">
-    <button class="modal-close" onclick="closeModal('modal-confirm-delete')">✕</button>
-    <div class="modal-title">מחיקת שאלה</div>
-    <div class="modal-sub">האם אתה בטוח שברצונך למחוק שאלה זו? הפעולה אינה הפיכה.</div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="closeModal('modal-confirm-delete')">ביטול</button>
-      <button class="btn btn-danger" onclick="confirmDeleteQuestion()">🗑️ מחק</button>
+    <!-- Comparison Table -->
+    <div class="compare-section">
+      <div class="compare-title">השוואת תוכניות</div>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>פיצ'ר</th>
+            <th>רגיל</th>
+            <th class="col-pro">פרו</th>
+            <th class="col-ultra">אולטרה</th>
+            <th class="col-biz">עסקי</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>כמות פרויקטים</td><td>5</td><td class="col-pro">ללא הגבלה</td><td class="col-ultra">ללא הגבלה</td><td class="col-biz">ללא הגבלה</td></tr>
+          <tr><td>שאלות לפרויקט</td><td>15</td><td class="col-pro">25</td><td class="col-ultra">ללא הגבלה</td><td class="col-biz">ללא הגבלה</td></tr>
+          <tr><td>משתתפים</td><td>15</td><td class="col-pro">ללא הגבלה*</td><td class="col-ultra">ללא הגבלה</td><td class="col-biz">ללא הגבלה</td></tr>
+          <tr><td>QR Code מעוצב</td><td>❌</td><td class="col-pro">✅</td><td class="col-ultra">✅</td><td class="col-biz">✅</td></tr>
+          <tr><td>הטמעה באתר</td><td>❌</td><td class="col-pro">❌</td><td class="col-ultra">✅</td><td class="col-biz">✅</td></tr>
+          <tr><td>דומיין מותאם</td><td>❌</td><td class="col-pro">❌</td><td class="col-ultra">❌</td><td class="col-biz">✅</td></tr>
+          <tr><td>יצירה עם AI</td><td>❌</td><td class="col-pro">עד 2</td><td class="col-ultra">עד 5</td><td class="col-biz">ללא הגבלה</td></tr>
+          <tr><td>אפקטים קוליים</td><td>❌</td><td class="col-pro">עד 5</td><td class="col-ultra">עד 15</td><td class="col-biz">50</td></tr>
+          <tr><td>מוד כדורים נופלים</td><td>❌</td><td class="col-pro">❌</td><td class="col-ultra">❌</td><td class="col-biz">✅</td></tr>
+          <tr><td>White Label</td><td>❌</td><td class="col-pro">❌</td><td class="col-ultra">❌</td><td class="col-biz">✅</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:16px;font-size:0.8rem;color:var(--text-muted);text-align:right">* בחשבון פרו — ללא הגבלה על השאלון הראשון בלבד</div>
     </div>
-  </div>
-</div>
 
-<!-- Upgrade Modal -->
-<div class="modal-overlay" id="modal-upgrade">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('modal-upgrade')">✕</button>
-    <div class="modal-title">⚡ שדרוג חשבון</div>
-    <div class="modal-sub" id="upgrade-modal-sub">שדרג כדי לגשת לתכונות מתקדמות</div>
-    <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:8px;padding:16px;text-align:center;margin:8px 0 16px;">
-      <div style="font-family:var(--font-display);font-size:28px;font-weight:900;color:var(--purple);" id="upgrade-modal-price">$7.99</div>
-      <div style="font-size:13px;color:var(--muted);">לחודש</div>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" onclick="closeModal('modal-upgrade')">ביטול</button>
-      <button class="btn btn-primary" onclick="processUpgrade()">💳 שדרג עכשיו</button>
-    </div>
+    <footer>
+      <div class="footer-logo">ESCAPE<span style="color:var(--cyan)">IQ</span></div>
+      <div class="footer-links">
+        <span class="footer-link">אודות</span>
+        <span class="footer-link">תנאי שימוש</span>
+        <span class="footer-link">פרטיות</span>
+        <span class="footer-link">צור קשר</span>
+      </div>
+      <div class="footer-copy">© 2025 EscapeIQ</div>
+    </footer>
   </div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   APP STATE
-═══════════════════════════════════════════════ */
-const AppState = {
-  currentPage: 'home',
-  currentUser: null,
-  projects: [],
-  currentProject: null,
-  questions: [],
-  pendingOTP: null,
-  pendingEmail: null,
-  pendingPassword: null,
-  pendingUserData: null,
-  questionToDelete: null,
-  settings: { timer: false, combo: false, random: false, shop: false },
-  upgradeTarget: null,
-  otpExpiry: null,
-  _otpTimer: null,
-};
-
-const PLAN_PRICES = { pro: '$7.99', ultra: '$13.99', business: '$17.99' };
-const RANK_THRESHOLDS = [
-  { name: 'Noob', min: 0, class: 'rank-noob', icon: '🎮' },
-  { name: 'Hacker', min: 1000, class: 'rank-hacker', icon: '💻' },
-  { name: 'God Mode', min: 5000, class: 'rank-god', icon: '👑' },
-];
-
-/* ═══════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════ */
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('loading-screen').style.opacity = '0';
-    document.getElementById('loading-screen').style.transition = 'opacity 0.5s';
-    setTimeout(() => {
-      document.getElementById('loading-screen').style.display = 'none';
-      document.getElementById('main-nav').style.display = 'flex';
-      showPage('home');
-    }, 500);
-  }, 2200);
-  initDemoMap();
-  // NOTE: initOTPInputs() is now called from showOTPForm() to ensure DOM is ready
-  spawnParticles();
-
-  window._onAuthReady = (user) => {
-    AppState.currentUser = user;
-    updateNavForAuth(user);
-    if (user) {
-      populateSidebar(user);
-      loadProjects();
-      // Auto-navigate to dashboard if already logged in on page load
-      if (AppState.currentPage === 'home') showPage('dashboard');
-    }
-  };
-});
-
-/* ═══════════════════════════════════════════════
-   NAVIGATION
-═══════════════════════════════════════════════ */
-function showPage(page) {
+function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const el = document.getElementById('page-' + page);
-  if (el) el.classList.add('active');
-  AppState.currentPage = page;
-  window.scrollTo(0, 0);
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const map = {home:0, pricing:1, auth:2};
+  document.querySelectorAll('.nav-link')[map[name]]?.classList.add('active');
+  window.scrollTo(0,0);
 }
 
-function scrollToSection(id) {
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: 'smooth' });
-}
-
-function updateNavForAuth(user) {
-  const navLogin = document.getElementById('nav-login');
-  const navDash = document.getElementById('nav-dashboard');
-  const navLogout = document.getElementById('nav-logout');
-  const navCta = document.getElementById('nav-cta');
-  if (user) {
-    navLogin.style.display = 'none';
-    navDash.style.display = 'inline';
-    navLogout.style.display = 'inline';
-    navCta.style.display = 'none';
-  } else {
-    navLogin.style.display = 'inline';
-    navDash.style.display = 'none';
-    navLogout.style.display = 'none';
-    navCta.style.display = 'inline-flex';
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   AUTH TAB
-═══════════════════════════════════════════════ */
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
-  });
-  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-  document.getElementById('auth-' + tab).classList.add('active');
-}
-
-/* ═══════════════════════════════════════════════
-   AUTH: GOOGLE
-═══════════════════════════════════════════════ */
-async function handleGoogleLogin() {
-  try {
-    const { auth, googleProvider, signInWithPopup, db, doc, getDoc, setDoc } = window._fb;
-    showToast('מתחבר עם Google...', 'info');
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    // Create/fetch Firestore user doc
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    if (!snap.exists()) {
-      await setDoc(doc(db, 'users', user.uid), {
-        displayName: user.displayName || 'EscapeIQ User',
-        username: '',
-        email: user.email,
-        plan: 'free',
-        xp: 0,
-        streak: 0,
-        createdAt: new Date().toISOString(),
-        projectCount: 0,
-      });
-    }
-
-    const data = snap.exists() ? snap.data() : {};
-    AppState.currentUser = { ...user, ...data };
-    updateNavForAuth(AppState.currentUser);
-    populateSidebar(AppState.currentUser);
-    loadProjects();
-    showToast('ברוך הבא! 🎮', 'success');
-    showPage('dashboard');
-  } catch (error) {
-    if (error.code !== 'auth/popup-closed-by-user') {
-      showToast('שגיאה בהתחברות עם גוגל: ' + (error.message || ''), 'error');
-    }
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   AUTH: EMAIL LOGIN
-═══════════════════════════════════════════════ */
-async function handleEmailLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  if (!email || !pass) { showToast('מלא את כל השדות', 'error'); return; }
-  const { auth, signInWithEmailAndPassword, db, doc, getDoc } = window._fb;
-  const btn = document.querySelector('#auth-login .auth-submit');
-  if (btn) { btn.disabled = true; btn.textContent = 'מתחבר...'; }
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, pass);
-    const snap = await getDoc(doc(db, 'users', result.user.uid));
-    const data = snap.exists() ? snap.data() : {};
-    AppState.currentUser = { ...result.user, ...data };
-    updateNavForAuth(AppState.currentUser);
-    populateSidebar(AppState.currentUser);
-    loadProjects();
-    showToast('ברוך הבא! 🎮', 'success');
-    showPage('dashboard');
-  } catch (e) {
-    const msg = e.code === 'auth/wrong-password' ? 'סיסמה שגויה'
-      : e.code === 'auth/user-not-found' ? 'משתמש לא נמצא'
-      : e.code === 'auth/invalid-email' ? 'אימייל לא תקין'
-      : e.code === 'auth/invalid-credential' ? 'אימייל או סיסמה שגויים'
-      : e.code === 'auth/too-many-requests' ? 'יותר מדי ניסיונות – נסה שוב מאוחר יותר'
-      : 'שגיאה: ' + e.message;
-    showToast(msg, 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '⚡ כניסה'; }
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   AUTH: EMAIL REGISTER
-═══════════════════════════════════════════════ */
-async function handleEmailRegister() {
-  const fname = document.getElementById('reg-fname').value.trim();
-  const lname = document.getElementById('reg-lname').value.trim();
-  const username = document.getElementById('reg-username').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-
-  if (!fname || !lname || !username || !email || !pass) {
-    showToast('מלא את כל השדות', 'error'); return;
-  }
-  if (pass.length < 6) {
-    showToast('הסיסמה חייבת להיות לפחות 6 תווים', 'error'); return;
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showToast('כתובת אימייל לא תקינה', 'error'); return;
-  }
-  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-    showToast('שם משתמש: 3-20 תווים, אותיות/מספרים/קו תחתי בלבד', 'error'); return;
-  }
-
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  AppState.pendingOTP = otp.toString();
-  AppState.pendingEmail = email;
-  AppState.pendingPassword = pass;
-  AppState.pendingUserData = { displayName: `${fname} ${lname}`, username, email, plan: 'free', xp: 0, streak: 0 };
-  AppState.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-  const btn = document.querySelector('#auth-register .auth-submit');
-  if (btn) { btn.disabled = true; btn.textContent = 'שולח קוד...'; }
-  showToast('שולח קוד אימות...', 'info');
-  const sent = await window.sendOTPEmail(email, fname, otp);
-  if (btn) { btn.disabled = false; btn.textContent = '🚀 צור חשבון'; }
-  if (sent) {
-    showToast('קוד נשלח לאימייל ✉️', 'success');
-    showOTPForm();
-  } else {
-    showToast('שגיאה בשליחת המייל. נסה שוב.', 'error');
-  }
-}
-
-function showOTPForm() {
+function switchTab(el, tab) {
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-  document.getElementById('auth-otp').classList.add('active');
-  initOTPInputs(); // FIX: was never called
-  setTimeout(() => document.querySelector('.otp-input').focus(), 100);
-  startOTPCountdown();
+  el.classList.add('active');
+  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
+  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
 }
 
-function startOTPCountdown() {
-  const el = document.getElementById('otp-timer');
-  if (!el) return;
-  clearInterval(AppState._otpTimer);
-  AppState._otpTimer = setInterval(() => {
-    const left = Math.max(0, AppState.otpExpiry - Date.now());
-    const mins = Math.floor(left / 60000);
-    const secs = Math.floor((left % 60000) / 1000);
-    el.textContent = `⏱ ${mins}:${secs.toString().padStart(2,'0')} נותרו`;
-    if (left === 0) {
-      clearInterval(AppState._otpTimer);
-      el.textContent = '⚠️ הקוד פג תוקף';
-      el.style.color = 'var(--red)';
-    }
-  }, 1000);
+function showVerify() {
+  document.getElementById('register-card').style.display = 'none';
+  const v = document.getElementById('verify-card');
+  v.style.display = 'block';
+  v.classList.add('active');
 }
 
-async function handleOTPVerify() {
-  const inputs = document.querySelectorAll('.otp-input');
-  const entered = Array.from(inputs).map(i => i.value).join('');
-  if (entered.length < 6) { showToast('הזן את כל 6 הספרות', 'error'); return; }
-
-  // Check expiry
-  if (AppState.otpExpiry && Date.now() > AppState.otpExpiry) {
-    showToast('הקוד פג תוקף. לחץ "שלח שוב"', 'error');
-    return;
-  }
-
-  if (entered !== AppState.pendingOTP) {
-    showToast('קוד שגוי! נסה שוב.', 'error');
-    inputs.forEach(i => { i.value = ''; i.style.borderColor = 'var(--red)'; });
-    setTimeout(() => inputs.forEach(i => i.style.borderColor = ''), 1500);
-    inputs[0].focus();
-    return;
-  }
-
-  const btn = document.querySelector('#auth-otp .auth-submit');
-  if (btn) { btn.disabled = true; btn.textContent = 'יוצר חשבון...'; }
-
-  const { auth, createUserWithEmailAndPassword, db, doc, setDoc } = window._fb;
-  try {
-    const result = await createUserWithEmailAndPassword(auth, AppState.pendingEmail, AppState.pendingPassword);
-    await setDoc(doc(db, 'users', result.user.uid), {
-      ...AppState.pendingUserData,
-      createdAt: new Date().toISOString(),
-      projectCount: 0,
-    });
-    clearInterval(AppState._otpTimer);
-    AppState.currentUser = { ...result.user, ...AppState.pendingUserData };
-    updateNavForAuth(AppState.currentUser);
-    populateSidebar(AppState.currentUser);
-    loadProjects();
-    showToast('חשבון נוצר בהצלחה! 🎉', 'success');
-    AppState.pendingOTP = null;
-    AppState.pendingEmail = null;
-    AppState.pendingPassword = null;
-    AppState.pendingUserData = null;
-    showPage('dashboard');
-  } catch (e) {
-    const msg = e.code === 'auth/email-already-in-use' ? 'אימייל זה כבר רשום במערכת' : 'שגיאה: ' + e.message;
-    showToast(msg, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '✓ אמת חשבון'; }
+function moveNext(el) {
+  if (el.value.length === 1) {
+    const inputs = document.querySelectorAll('.code-input');
+    const idx = Array.from(inputs).indexOf(el);
+    if (idx < inputs.length - 1) inputs[idx+1].focus();
   }
 }
 
-async function resendOTP() {
-  if (!AppState.pendingEmail) return;
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  AppState.pendingOTP = otp.toString();
-  AppState.otpExpiry = Date.now() + 10 * 60 * 1000;
-  // clear current inputs
-  document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.style.borderColor = ''; });
-  const timerEl = document.getElementById('otp-timer');
-  if (timerEl) { timerEl.style.color = ''; }
-  const sent = await window.sendOTPEmail(AppState.pendingEmail, 'משתמש', otp);
-  showToast(sent ? 'קוד חדש נשלח ✉️' : 'שגיאה בשליחה', sent ? 'success' : 'error');
-  if (sent) startOTPCountdown();
-}
-
-/* ═══════════════════════════════════════════════
-   AUTH: LOGOUT
-═══════════════════════════════════════════════ */
-async function handleLogout() {
-  const { auth, signOut } = window._fb;
-  clearInterval(AppState._otpTimer);
-  await signOut(auth);
-  AppState.currentUser = null;
-  AppState.projects = [];
-  AppState.currentProject = null;
-  AppState.questions = [];
-  updateNavForAuth(null);
-  showPage('home');
-  showToast('התנתקת בהצלחה', 'info');
-}
-
-/* ═══════════════════════════════════════════════
-   OTP INPUT BEHAVIOR
-═══════════════════════════════════════════════ */
-function initOTPInputs() {
-  const inputs = document.querySelectorAll('.otp-input');
-  // Clone to remove any stale event listeners from previous calls
-  inputs.forEach((input) => {
-    const fresh = input.cloneNode(true);
-    input.parentNode.replaceChild(fresh, input);
-  });
-  const freshInputs = document.querySelectorAll('.otp-input');
-  freshInputs.forEach((input, idx) => {
-    input.addEventListener('input', (e) => {
-      const val = e.target.value.replace(/\D/g, '');
-      e.target.value = val;
-      if (val && idx < freshInputs.length - 1) freshInputs[idx + 1].focus();
-      // Auto-submit when all 6 digits filled
-      if (Array.from(freshInputs).every(i => i.value.length === 1)) {
-        setTimeout(handleOTPVerify, 100);
-      }
-    });
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Backspace' && !e.target.value && idx > 0) freshInputs[idx - 1].focus();
-      if (e.key === 'Enter') handleOTPVerify();
-    });
-    input.addEventListener('paste', (e) => {
-      const data = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-      if (data) {
-        e.preventDefault();
-        data.split('').forEach((ch, i) => { if (freshInputs[i]) freshInputs[i].value = ch; });
-        const focusIdx = Math.min(data.length, freshInputs.length - 1);
-        freshInputs[focusIdx].focus();
-        if (data.length === 6) setTimeout(handleOTPVerify, 100);
-      }
-    });
-  });
-}
-
-/* Enter key support on auth forms */
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter') return;
-  const active = document.activeElement;
-  if (!active) return;
-  if (active.id === 'login-email' || active.id === 'login-pass') { handleEmailLogin(); return; }
-  if (['reg-fname','reg-lname','reg-username','reg-email','reg-pass'].includes(active.id)) { handleEmailRegister(); return; }
-  if (active.id === 'profile-display-name' || active.id === 'profile-username') { saveProfile(); return; }
-});
-
-/* ═══════════════════════════════════════════════
-   DASHBOARD
-═══════════════════════════════════════════════ */
-function populateSidebar(user) {
-  const name = user.displayName || user.username || 'EscapeIQ User';
-  const initial = name.charAt(0).toUpperCase();
-  document.getElementById('sidebar-avatar').textContent = initial;
-  document.getElementById('sidebar-name').textContent = name;
-  const xp = user.xp || 0;
-  const rank = getRank(xp);
-  document.getElementById('sidebar-rank').innerHTML = `<span class="rank-badge ${rank.class}">${rank.icon} ${rank.name}</span>`;
-
-  // XP bar: show progress within current rank tier (FIX: was always /1000)
-  const rankIdx = RANK_THRESHOLDS.indexOf(rank);
-  const nextRank = RANK_THRESHOLDS[rankIdx + 1];
-  let xpPct;
-  if (!nextRank) {
-    xpPct = 100;
-  } else {
-    xpPct = Math.min(((xp - rank.min) / (nextRank.min - rank.min)) * 100, 100);
-  }
-  document.getElementById('dash-xp').textContent = xp;
-  document.getElementById('xp-bar-fill').style.width = xpPct + '%';
-  document.getElementById('dash-streak').textContent = (user.streak || 0) + '🔥';
-
-  // Update XP bar labels dynamically
-  const xpLabelLeft = document.querySelector('.xp-bar-wrap .xp-labels span:first-child') ||
-    document.querySelector('[data-xp-current]');
-  const xpLabelRight = document.querySelector('.xp-bar-wrap .xp-labels span:last-child') ||
-    document.querySelector('[data-xp-next]');
-
-  // Stats tab
-  document.getElementById('stat-xp').textContent = xp;
-  document.getElementById('stat-streak').textContent = user.streak || 0;
-  document.getElementById('stat-rank').textContent = rank.name;
-
-  // Profile tab
-  document.getElementById('profile-avatar-big').textContent = initial;
-  document.getElementById('profile-name-big').textContent = name;
-  document.getElementById('profile-email-disp').textContent = user.email || '';
-  document.getElementById('profile-rank-badge').innerHTML = `<span class="rank-badge ${rank.class}">${rank.icon} ${rank.name}</span>`;
-  document.getElementById('profile-display-name').value = name;
-  document.getElementById('profile-username').value = user.username || '';
-}
-
-function getRank(xp) {
-  for (let i = RANK_THRESHOLDS.length - 1; i >= 0; i--) {
-    if (xp >= RANK_THRESHOLDS[i].min) return RANK_THRESHOLDS[i];
-  }
-  return RANK_THRESHOLDS[0];
-}
-
-function showDashTab(tab) {
-  ['projects','stats','profile','upgrade'].forEach(t => {
-    const el = document.getElementById('dash-' + t);
-    if (el) el.style.display = 'none';
-    const link = document.getElementById('tab-' + t);
-    if (link) link.classList.remove('active');
-  });
-  const el = document.getElementById('dash-' + tab);
-  if (el) el.style.display = 'block';
-  const link = document.getElementById('tab-' + tab);
-  if (link) link.classList.add('active');
-  showPage('dashboard');
-}
-
-/* ═══════════════════════════════════════════════
-   PROJECTS
-═══════════════════════════════════════════════ */
-async function loadProjects() {
-  if (!AppState.currentUser) return;
-  const { db, collection, query, where, getDocs } = window._fb;
-  try {
-    const q = query(collection(db, 'projects'), where('ownerId', '==', AppState.currentUser.uid));
-    const snap = await getDocs(q);
-    AppState.projects = [];
-    snap.forEach(d => AppState.projects.push({ id: d.id, ...d.data() }));
-    // Sort by updatedAt descending
-    AppState.projects.sort((a, b) => (b.updatedAt || '') > (a.updatedAt || '') ? 1 : -1);
-    renderProjects();
-    const countEl = document.getElementById('stat-projects');
-    if (countEl) countEl.textContent = AppState.projects.length;
-  } catch (e) {
-    console.error('Load projects error:', e);
-    showToast('שגיאה בטעינת פרויקטים', 'error');
-  }
-}
-
-function renderProjects() {
-  const grid = document.getElementById('projects-grid');
-  grid.innerHTML = '';
-
-  // New project card
-  const newCard = document.createElement('div');
-  newCard.className = 'new-project-card';
-  newCard.onclick = openNewProjectModal;
-  newCard.innerHTML = `<div class="new-project-icon">+</div><div class="new-project-label">פרויקט חדש</div>`;
-  grid.appendChild(newCard);
-
-  AppState.projects.forEach(proj => {
-    const card = document.createElement('div');
-    card.className = 'project-card';
-    card.onclick = () => openProject(proj);
-    const isEscape = proj.type === 'escape';
-    const qCount = proj.questions ? proj.questions.length : 0;
-    const dateStr = proj.updatedAt
-      ? new Date(proj.updatedAt).toLocaleDateString('he-IL', { day:'numeric', month:'short' })
-      : '';
-    card.innerHTML = `
-      <div class="project-thumb ${isEscape ? 'project-thumb-escape' : 'project-thumb-quiz'}">
-        ${isEscape ? '🗝️' : '🧠'}
-      </div>
-      <div class="project-body">
-        <div class="project-name">${escapeHtml(proj.name || 'ללא שם')}</div>
-        <div class="project-meta">
-          <span>${isEscape ? 'חדר בריחה' : 'חידון'}</span>
-          <span>${qCount} שאלות</span>
-          ${dateStr ? `<span style="margin-right:auto;color:var(--muted);">${dateStr}</span>` : ''}
-        </div>
-      </div>`;
-    grid.appendChild(card);
-  });
-}
-
-function openNewProjectModal() {
-  openModal('modal-new-project');
-}
-
-async function startCreateProject(type) {
-  closeModal('modal-new-project');
-  const name = type === 'escape' ? 'חדר בריחה חדש' : 'חידון חדש';
-  AppState.currentProject = { type, name, questions: [], settings: {}, theme: 'cyber' };
-  document.getElementById('project-name-input').value = name;
-  document.getElementById('project-type').value = type;
-  document.getElementById('creator-project-name').textContent = name;
-  AppState.questions = [];
-  renderEditorCanvas();
-  renderSlidesPanel();
-  showPage('creator');
-}
-
-function openProject(proj) {
-  AppState.currentProject = proj;
-  AppState.questions = proj.questions || [];
-  document.getElementById('project-name-input').value = proj.name || '';
-  document.getElementById('project-type').value = proj.type || 'quiz';
-  document.getElementById('creator-project-name').textContent = proj.name || 'פרויקט';
-  renderEditorCanvas();
-  renderSlidesPanel();
-  showPage('creator');
-}
-
-async function saveProject() {
-  if (!AppState.currentUser) { showToast('יש להתחבר תחילה', 'error'); return; }
-  const { db, doc, setDoc, addDoc, collection, updateDoc } = window._fb;
-  const name = document.getElementById('project-name-input').value.trim() || 'ללא שם';
-  const type = document.getElementById('project-type').value;
-  const theme = document.getElementById('theme-select').value;
-
-  const saveBtn = document.querySelector('.editor-toolbar .toolbar-btn:nth-child(5)');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 שומר...'; }
-
-  const projectData = {
-    name,
-    type,
-    theme,
-    ownerId: AppState.currentUser.uid,
-    questions: AppState.questions,
-    settings: AppState.settings,
-    updatedAt: new Date().toISOString(),
-  };
-
-  try {
-    if (AppState.currentProject && AppState.currentProject.id) {
-      await updateDoc(doc(db, 'projects', AppState.currentProject.id), projectData);
-    } else {
-      projectData.createdAt = new Date().toISOString();
-      const ref = await addDoc(collection(db, 'projects'), projectData);
-      AppState.currentProject = { id: ref.id, ...projectData };
-      // Update project count in Firestore
-      const { updateDoc: ud, doc: d } = window._fb;
-      ud(d(db, 'users', AppState.currentUser.uid), {
-        projectCount: (AppState.currentUser.projectCount || 0) + 1
-      }).catch(() => {});
-    }
-    document.getElementById('creator-project-name').textContent = name;
-    AppState.currentProject = { ...AppState.currentProject, ...projectData };
-    showToast('פרויקט נשמר ✅', 'success');
-    loadProjects();
-  } catch (e) {
-    showToast('שגיאה בשמירה: ' + e.message, 'error');
-  } finally {
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 שמור'; }
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   QUESTION EDITOR
-═══════════════════════════════════════════════ */
-function addQuestion(type) {
-  const q = createDefaultQuestion(type);
-  AppState.questions.push(q);
-  renderEditorCanvas();
-  renderSlidesPanel();
-  // Scroll to bottom
-  setTimeout(() => {
-    const canvas = document.getElementById('editor-canvas');
-    canvas.scrollTop = canvas.scrollHeight;
-  }, 100);
-}
-
-function createDefaultQuestion(type) {
-  const base = { id: Date.now() + Math.random(), type, text: '', points: 100 };
-  if (type === 'american') {
-    return { ...base, options: ['', '', '', ''], correctIndex: 0 };
-  } else if (type === 'truefalse') {
-    return { ...base, correct: true };
-  } else if (type === 'typing') {
-    return { ...base, answer: '' };
-  } else if (type === 'order') {
-    return { ...base, items: ['', '', '', ''], correctOrder: [0, 1, 2, 3] };
-  }
-  return base;
-}
-
-function renderEditorCanvas() {
-  const canvas = document.getElementById('editor-canvas');
-  if (AppState.questions.length === 0) {
-    canvas.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;color:var(--muted);">
-        <div style="font-size:48px;margin-bottom:16px;">✏️</div>
-        <div style="font-family:var(--font-display);font-size:14px;letter-spacing:1px;margin-bottom:8px;">אין שאלות עדיין</div>
-        <div style="font-size:13px;">לחץ על אחד הכפתורים למעלה כדי להוסיף שאלה ראשונה</div>
-      </div>`;
-    return;
-  }
-
-  canvas.innerHTML = AppState.questions.map((q, idx) => buildQuestionCard(q, idx)).join('');
-}
-
-function buildQuestionCard(q, idx) {
-  const typeNames = { american: 'אמריקאי', truefalse: 'אמת / שקר', typing: 'הקלדה', order: 'סידור' };
-  let inner = '';
-
-  if (q.type === 'american') {
-    const opts = q.options.map((opt, i) => `
-      <div class="answer-option ${q.correctIndex === i ? 'correct' : ''}" onclick="setCorrect(${idx},${i})">
-        <div class="answer-check">${q.correctIndex === i ? '✓' : ''}</div>
-        <input class="answer-input" placeholder="תשובה ${i+1}" value="${escapeHtml(opt)}"
-          oninput="updateOption(${idx},${i},this.value)"/>
-      </div>`).join('');
-    inner = `<div class="answer-grid">${opts}</div>
-      <div style="margin-top:12px;display:flex;gap:8px;">
-        ${q.options.length < 6 ? `<button class="toolbar-btn" onclick="addOption(${idx})">+ הוסף תשובה</button>` : ''}
-        ${q.options.length > 2 ? `<button class="toolbar-btn" onclick="removeLastOption(${idx})">- הסר תשובה</button>` : ''}
-      </div>`;
-  } else if (q.type === 'truefalse') {
-    inner = `
-      <div style="display:flex;gap:12px;margin-top:8px;">
-        <div class="answer-option ${q.correct === true ? 'correct' : ''}" style="flex:1;" onclick="setTrueFalse(${idx},true)">
-          <div class="answer-check">${q.correct === true ? '✓' : ''}</div>
-          <span style="font-size:14px;">✅ נכון</span>
-        </div>
-        <div class="answer-option ${q.correct === false ? 'correct' : ''}" style="flex:1;" onclick="setTrueFalse(${idx},false)">
-          <div class="answer-check">${q.correct === false ? '✓' : ''}</div>
-          <span style="font-size:14px;">❌ לא נכון</span>
-        </div>
-      </div>`;
-  } else if (q.type === 'typing') {
-    inner = `
-      <div class="form-group" style="margin-top:12px;">
-        <label>תשובה נכונה</label>
-        <input type="text" placeholder="הקלד את התשובה הנכונה" value="${escapeHtml(q.answer || '')}"
-          oninput="updateTypingAnswer(${idx},this.value)" dir="rtl"/>
-      </div>`;
-  } else if (q.type === 'order') {
-    inner = `
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
-        ${q.items.map((item, i) => `
-          <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;">
-            <span style="color:var(--cyan);font-family:var(--font-display);font-size:13px;min-width:24px;">${i+1}.</span>
-            <input type="text" placeholder="פריט ${i+1}" value="${escapeHtml(item)}"
-              oninput="updateOrderItem(${idx},${i},this.value)" style="flex:1;background:transparent;border:none;padding:0;"/>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  return `
-    <div class="q-editor-card" id="qcard-${idx}">
-      <div class="q-header">
-        <div class="q-num">${idx+1}</div>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text);">שאלה ${idx+1}</div>
-          <div class="q-type-badge">${typeNames[q.type] || q.type}</div>
-        </div>
-        <div class="q-actions">
-          <div class="q-action-btn" onclick="moveQuestion(${idx},-1)" title="העבר למעלה">↑</div>
-          <div class="q-action-btn" onclick="moveQuestion(${idx},1)" title="העבר למטה">↓</div>
-          <div class="q-action-btn danger" onclick="askDeleteQuestion(${idx})" title="מחק">🗑</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>טקסט השאלה</label>
-        <input type="text" placeholder="כתוב את השאלה כאן..." value="${escapeHtml(q.text)}"
-          oninput="updateQuestionText(${idx},this.value)"/>
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:12px;margin-bottom:0;">
-        <div style="flex:1;">
-          <label>נקודות</label>
-          <input type="number" value="${q.points||100}" min="10" max="1000" step="10"
-            oninput="updatePoints(${idx},this.value)" style="max-width:100px;"/>
-        </div>
-      </div>
-      ${inner}
-    </div>`;
-}
-
-function updateQuestionText(idx, val) { AppState.questions[idx].text = val; renderSlidesPanel(); }
-function updateOption(idx, optIdx, val) { AppState.questions[idx].options[optIdx] = val; }
-function setCorrect(idx, optIdx) { AppState.questions[idx].correctIndex = optIdx; renderEditorCanvas(); }
-function setTrueFalse(idx, val) { AppState.questions[idx].correct = val; renderEditorCanvas(); }
-function updateTypingAnswer(idx, val) { AppState.questions[idx].answer = val; }
-function updateOrderItem(idx, i, val) { AppState.questions[idx].items[i] = val; }
-function updatePoints(idx, val) { AppState.questions[idx].points = parseInt(val) || 100; }
-
-function addOption(idx) {
-  if (AppState.questions[idx].options.length < 6) {
-    AppState.questions[idx].options.push('');
-    renderEditorCanvas();
-  }
-}
-function removeLastOption(idx) {
-  if (AppState.questions[idx].options.length > 2) {
-    AppState.questions[idx].options.pop();
-    if (AppState.questions[idx].correctIndex >= AppState.questions[idx].options.length) {
-      AppState.questions[idx].correctIndex = 0;
-    }
-    renderEditorCanvas();
-  }
-}
-
-function moveQuestion(idx, dir) {
-  const newIdx = idx + dir;
-  if (newIdx < 0 || newIdx >= AppState.questions.length) return;
-  [AppState.questions[idx], AppState.questions[newIdx]] = [AppState.questions[newIdx], AppState.questions[idx]];
-  renderEditorCanvas();
-  renderSlidesPanel();
-}
-
-function askDeleteQuestion(idx) {
-  AppState.questionToDelete = idx;
-  openModal('modal-confirm-delete');
-}
-
-function confirmDeleteQuestion() {
-  if (AppState.questionToDelete !== null) {
-    AppState.questions.splice(AppState.questionToDelete, 1);
-    AppState.questionToDelete = null;
-    renderEditorCanvas();
-    renderSlidesPanel();
-  }
-  closeModal('modal-confirm-delete');
-}
-
-/* ═══════════════════════════════════════════════
-   SLIDES PANEL
-═══════════════════════════════════════════════ */
-function renderSlidesPanel() {
-  const panel = document.getElementById('slides-panel');
-  panel.innerHTML = AppState.questions.map((q, idx) => `
-    <div class="slide-thumb" onclick="scrollToQuestion(${idx})">
-      <div class="slide-num">${idx+1}</div>
-      <span style="font-size:10px;color:var(--muted);line-height:1.3;display:block;max-height:40px;overflow:hidden;">
-        ${escapeHtml(q.text || 'שאלה ' + (idx+1))}
-      </span>
-    </div>`).join('') + `<div class="slide-add-btn" onclick="addQuestion('american')">+</div>`;
-}
-
-function scrollToQuestion(idx) {
-  const card = document.getElementById('qcard-' + idx);
-  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function previewProject() {
-  if (!AppState.currentProject || !AppState.currentProject.id) {
-    showToast('שמור את הפרויקט תחילה לפני תצוגה מקדימה', 'info');
-    return;
-  }
-  const link = `${window.location.origin}?play=${AppState.currentProject.id}`;
-  // Copy to clipboard
-  navigator.clipboard.writeText(link).then(() => {
-    showToast('קישור לתצוגה מקדימה הועתק ✅', 'success');
-  }).catch(() => {
-    showToast(`קישור: ${link}`, 'info');
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   SETTINGS TOGGLES
-═══════════════════════════════════════════════ */
-function toggleSetting(key) {
-  AppState.settings[key] = !AppState.settings[key];
-  const el = document.getElementById('toggle-' + key);
-  if (el) el.classList.toggle('on', AppState.settings[key]);
-}
-
-/* ═══════════════════════════════════════════════
-   PROFILE
-═══════════════════════════════════════════════ */
-async function saveProfile() {
-  if (!AppState.currentUser) return;
-  const { db, doc, updateDoc } = window._fb;
-  const name = document.getElementById('profile-display-name').value.trim();
-  const username = document.getElementById('profile-username').value.trim();
-  if (!name) { showToast('הזן שם תצוגה', 'error'); return; }
-  if (username && !/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-    showToast('שם משתמש: 3-20 תווים, אותיות/מספרים/קו תחתי בלבד', 'error'); return;
-  }
-  const btn = document.querySelector('#dash-profile .btn-primary');
-  if (btn) { btn.disabled = true; btn.textContent = 'שומר...'; }
-  try {
-    await updateDoc(doc(db, 'users', AppState.currentUser.uid), { displayName: name, username });
-    AppState.currentUser.displayName = name;
-    AppState.currentUser.username = username;
-    if (window._currentUser) { window._currentUser.displayName = name; window._currentUser.username = username; }
-    populateSidebar(AppState.currentUser);
-    showToast('פרופיל עודכן ✅', 'success');
-  } catch (e) {
-    showToast('שגיאה: ' + e.message, 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '💾 שמור שינויים'; }
-  }
-}
-
-async function changePassword() {
-  if (!AppState.currentUser || !AppState.currentUser.email) {
-    showToast('לא ניתן לאפס סיסמה עבור חשבון Google', 'error');
-    return;
-  }
-  // Check if new password field has a value - if so use updatePassword
-  const newPassEl = document.getElementById('new-password');
-  const newPass = newPassEl ? newPassEl.value.trim() : '';
-
-  const btn = document.querySelector('#dash-profile .btn-outline');
-  if (btn) { btn.disabled = true; btn.textContent = 'שולח...'; }
-  try {
-    // Import sendPasswordResetEmail dynamically
-    const { sendPasswordResetEmail } = await import(
-      'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'
-    );
-    const { auth } = window._fb;
-    await sendPasswordResetEmail(auth, AppState.currentUser.email);
-    if (newPassEl) newPassEl.value = '';
-    showToast('קישור לאיפוס סיסמה נשלח לאימייל שלך 📧', 'success');
-  } catch (e) {
-    showToast('שגיאה: ' + e.message, 'error');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔒 עדכן סיסמה'; }
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   UPGRADE
-═══════════════════════════════════════════════ */
-function upgradePlan(plan) {
-  AppState.upgradeTarget = plan;
-  const prices = { pro: '$7.99', ultra: '$13.99', business: '$17.99' };
-  const names = { pro: 'פרו', ultra: 'אולטרה', business: 'עסקי' };
-  document.getElementById('upgrade-modal-sub').textContent = `שדרג לתוכנית ${names[plan]}`;
-  document.getElementById('upgrade-modal-price').textContent = prices[plan];
-  openModal('modal-upgrade');
-}
-
-async function processUpgrade() {
-  showToast('🚧 מערכת התשלומים בפיתוח – בקרוב!', 'info');
-  closeModal('modal-upgrade');
-}
-
-/* ═══════════════════════════════════════════════
-   DEMO MAP (home page)
-═══════════════════════════════════════════════ */
-function initDemoMap() {
-  const mapEl = document.getElementById('demo-map');
-  if (!mapEl) return;
-  const cells = [
-    { emoji:'🏰', state:'completed' }, { emoji:'🔑', state:'completed' },
-    { emoji:'🚪', state:'active' }, { emoji:'❓', state:'locked' },
-    { emoji:'💎', state:'locked' },
-    { emoji:'🗝️', state:'completed' }, { emoji:'📜', state:'active' },
-    { emoji:'⚗️', state:'locked' }, { emoji:'🧪', state:'locked' },
-    { emoji:'🏆', state:'locked' },
-    { emoji:'💀', state:'locked' }, { emoji:'🔮', state:'locked' },
-    { emoji:'📦', state:'locked' }, { emoji:'🗡️', state:'locked' },
-    { emoji:'🌟', state:'locked' },
-    { emoji:'🧩', state:'locked' }, { emoji:'🔬', state:'locked' },
-    { emoji:'⚙️', state:'locked' }, { emoji:'🎯', state:'locked' },
-    { emoji:'🌀', state:'locked' },
-  ];
-  cells.forEach(c => {
-    const div = document.createElement('div');
-    div.className = `map-cell ${c.state}`;
-    div.textContent = c.emoji;
-    mapEl.appendChild(div);
-  });
-
-  // Animate demo
-  setInterval(() => {
-    const active = mapEl.querySelector('.map-cell.active');
-    if (!active) return;
-    const allCells = mapEl.querySelectorAll('.map-cell');
-    let found = false;
-    allCells.forEach((cell, i) => {
-      if (cell === active && i + 1 < allCells.length && !found) {
-        cell.classList.remove('active');
-        cell.classList.add('completed');
-        const next = allCells[i + 1];
-        if (next.classList.contains('locked')) {
-          next.classList.remove('locked');
-          next.classList.add('active');
-        }
-        found = true;
-      }
-    });
-  }, 2000);
-}
-
-/* ═══════════════════════════════════════════════
-   PARTICLES
-═══════════════════════════════════════════════ */
-function spawnParticles() {
-  for (let i = 0; i < 15; i++) {
-    setTimeout(() => {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.cssText = `
-        left:${Math.random()*100}%;
-        bottom:0;
-        animation-duration:${6+Math.random()*8}s;
-        animation-delay:${Math.random()*5}s;
-        opacity:0;
-        background:${Math.random()>.5?'var(--cyan)':'var(--purple)'};
-      `;
-      document.body.appendChild(p);
-    }, i * 300);
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   MODAL HELPERS
-═══════════════════════════════════════════════ */
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-// Close on backdrop click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-});
-
-/* ═══════════════════════════════════════════════
-   TOAST
-═══════════════════════════════════════════════ */
-function showToast(msg, type = 'info') {
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span>${icons[type]}</span> ${msg}`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(20px)';
-    toast.style.transition = 'all 0.3s';
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
-
-/* ═══════════════════════════════════════════════
-   UTILS
-═══════════════════════════════════════════════ */
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+function resendCode() {
+  alert('קוד חדש נשלח לאימייל!');
 }
 </script>
 </body>
