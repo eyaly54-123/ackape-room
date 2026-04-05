@@ -876,6 +876,127 @@ footer{
   font-size:0.65rem;font-weight:700;color:#fff;
   display:flex;align-items:center;justify-content:center;
 }
+
+/* ═══════════════════════════════════════════
+   EDITOR PAGE
+═══════════════════════════════════════════ */
+.editor-page{padding-top:64px;min-height:100vh;background:var(--bg-deep);}
+.editor-header{
+  background:rgba(13,21,48,0.95);border-bottom:1px solid var(--border);
+  padding:18px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.editor-back{
+  padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.88rem;
+  font-family:'Heebo',sans-serif;transition:all 0.2s;
+}
+.editor-back:hover{border-color:var(--cyan);color:var(--cyan);}
+.editor-project-title{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;background:var(--gradient-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;flex:1;}
+.editor-type-badge{
+  padding:4px 12px;border-radius:100px;font-size:0.78rem;font-weight:600;
+  background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);color:var(--cyan);
+}
+.editor-body{max-width:900px;margin:0 auto;padding:32px 24px;}
+.editor-section-title{font-size:1.05rem;font-weight:700;margin-bottom:16px;color:var(--text);}
+.questions-list{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;}
+.question-item{
+  background:rgba(13,21,48,0.8);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;
+  display:flex;gap:14px;align-items:flex-start;
+  transition:border-color 0.2s;
+}
+.question-item:hover{border-color:var(--border-glow);}
+.question-num{
+  min-width:32px;height:32px;border-radius:8px;
+  background:var(--gradient-btn);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:0.85rem;color:#fff;flex-shrink:0;margin-top:2px;
+}
+.question-content{flex:1;}
+.question-text{font-size:0.95rem;font-weight:600;margin-bottom:6px;color:var(--text);}
+.question-answers{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.answer-chip{
+  padding:3px 10px;border-radius:6px;font-size:0.78rem;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);
+}
+.answer-chip.correct{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:var(--green);}
+.question-actions{display:flex;gap:6px;}
+.btn-q-edit{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:0.8rem;font-family:'Heebo',sans-serif;transition:all 0.2s;}
+.btn-q-edit:hover{border-color:var(--cyan);color:var(--cyan);}
+.btn-q-del{padding:5px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.2);background:transparent;color:var(--red);cursor:pointer;font-size:0.8rem;font-family:'Heebo',sans-serif;transition:all 0.2s;}
+.btn-q-del:hover{background:rgba(239,68,68,0.1);}
+.btn-add-question{
+  width:100%;padding:14px;border-radius:12px;
+  border:2px dashed rgba(0,229,255,0.25);background:rgba(0,229,255,0.03);
+  color:var(--cyan);font-size:0.95rem;font-weight:600;font-family:'Heebo',sans-serif;
+  cursor:pointer;transition:all 0.2s;
+}
+.btn-add-question:hover{border-color:var(--cyan);background:rgba(0,229,255,0.07);}
+.empty-questions{text-align:center;padding:40px 20px;color:var(--text-muted);}
+.empty-questions .eq-icon{font-size:3rem;margin-bottom:12px;}
+
+/* Question editor modal */
+.q-modal-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.q-modal-overlay.active{display:flex;}
+.q-modal-box{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:20px;padding:30px;width:100%;max-width:560px;
+  max-height:90vh;overflow-y:auto;position:relative;
+}
+.q-modal-title{font-size:1.15rem;font-weight:700;margin-bottom:20px;}
+.answers-editor{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.answer-row{display:flex;align-items:center;gap:8px;}
+.answer-radio{
+  width:20px;height:20px;border-radius:50%;border:2px solid var(--border);
+  background:transparent;cursor:pointer;flex-shrink:0;transition:all 0.2s;
+}
+.answer-radio.correct-mark{border-color:var(--green);background:var(--green);}
+.answer-input{
+  flex:1;padding:8px 12px;border-radius:8px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  color:var(--text);font-size:0.9rem;font-family:'Heebo',sans-serif;outline:none;
+}
+.answer-input:focus{border-color:var(--cyan);}
+.btn-add-answer{
+  padding:6px 14px;border-radius:8px;border:1px dashed rgba(139,92,246,0.3);
+  background:transparent;color:var(--purple);font-size:0.82rem;font-family:'Heebo',sans-serif;cursor:pointer;
+}
+.q-modal-btns{display:flex;gap:10px;margin-top:20px;}
+.btn-q-save{flex:1;padding:11px;border-radius:10px;background:var(--gradient-btn);border:none;color:#fff;font-size:0.95rem;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;}
+.btn-q-cancel{padding:11px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:0.95rem;font-family:'Heebo',sans-serif;cursor:pointer;}
+
+/* ═══════════════════════════════════════════
+   UPGRADE MODAL
+═══════════════════════════════════════════ */
+.upgrade-modal-overlay{
+  position:fixed;inset:0;z-index:700;
+  background:rgba(0,0,0,0.8);backdrop-filter:blur(10px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.upgrade-modal-overlay.active{display:flex;}
+.upgrade-modal-box{
+  background:var(--bg-card);border:1px solid var(--border-glow);
+  border-radius:24px;padding:36px;width:100%;max-width:480px;
+  position:relative;text-align:center;
+}
+.upgrade-plans{display:flex;flex-direction:column;gap:10px;margin:20px 0;}
+.upgrade-plan{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-radius:12px;border:1.5px solid var(--border);
+  cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02);
+}
+.upgrade-plan:hover{border-color:var(--border-glow);}
+.upgrade-plan.selected{border-color:var(--cyan);background:rgba(0,229,255,0.06);}
+.upgrade-plan-name{font-weight:700;font-size:0.95rem;}
+.upgrade-plan-price{font-family:'Orbitron',monospace;font-weight:700;color:var(--cyan);}
+.upgrade-plan.plan-pro .upgrade-plan-price{color:var(--cyan);}
+.upgrade-plan.plan-ultra .upgrade-plan-price{color:var(--purple);}
+.upgrade-plan.plan-biz .upgrade-plan-price{color:var(--pink);}
+.upgrade-current-badge{font-size:0.72rem;padding:2px 8px;border-radius:100px;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
 </style>
 </head>
 <body>
@@ -1173,7 +1294,7 @@ footer{
           <li><span class="check-icon">✓</span> תמיכת קהילה</li>
           <li><span class="check-icon">✓</span> מוד רגיל בלבד</li>
         </ul>
-        <button class="pricing-btn pricing-btn-outline" onclick="showPage('auth')">התחל עכשיו</button>
+        <button class="pricing-btn pricing-btn-outline" onclick="handlePricingClick('free')">התחל עכשיו</button>
       </div>
       <div class="pricing-card popular">
         <div class="popular-badge">🔥 הכי פופולרי</div>
@@ -1189,7 +1310,7 @@ footer{
           <li><span class="check-icon">✓</span> AI: עד 2 פרויקטים</li>
           <li><span class="check-icon">✓</span> עד 5 אפקטים קוליים</li>
         </ul>
-        <button class="pricing-btn pricing-btn-primary" onclick="showPage('auth')">בחר פרו</button>
+        <button class="pricing-btn pricing-btn-primary" onclick="handlePricingClick('pro')">בחר פרו</button>
       </div>
       <div class="pricing-card">
         <div class="pricing-tier">אולטרה</div>
@@ -1204,7 +1325,7 @@ footer{
           <li><span class="check-icon">✓</span> עד 15 אפקטים קוליים</li>
           <li><span class="check-icon">✓</span> עיצוב מותאם אישית</li>
         </ul>
-        <button class="pricing-btn pricing-btn-outline" style="border-color:var(--purple);color:var(--purple)" onclick="showPage('auth')">בחר אולטרה</button>
+        <button class="pricing-btn pricing-btn-outline" style="border-color:var(--purple);color:var(--purple)" onclick="handlePricingClick('ultra')">בחר אולטרה</button>
       </div>
       <div class="pricing-card">
         <div class="pricing-tier">עסקי</div>
@@ -1219,7 +1340,7 @@ footer{
           <li><span class="check-icon">✓</span> כל המודים</li>
           <li><span class="check-icon">✓</span> תמיכה עדיפות גבוהה</li>
         </ul>
-        <button class="pricing-btn pricing-btn-dark" onclick="showPage('auth')">בחר עסקי</button>
+        <button class="pricing-btn pricing-btn-dark" onclick="handlePricingClick('business')">בחר עסקי</button>
       </div>
     </div>
     <div class="compare-section">
@@ -1262,7 +1383,7 @@ footer{
         <button class="sidebar-btn" id="sb-play" onclick="switchDashTab('play')">🎮<span class="sidebar-tooltip">שחק בפרויקט</span></button>
         <div class="sidebar-divider"></div>
         <button class="sidebar-btn" id="sb-stats" onclick="switchDashTab('stats')">📊<span class="sidebar-tooltip">סטטיסטיקות</span></button>
-        <button class="sidebar-btn" onclick="showPage('pricing')">⚡<span class="sidebar-tooltip">שדרוג חשבון</span></button>
+        <button class="sidebar-btn" onclick="openUpgradeModal('pro')">⚡<span class="sidebar-tooltip">שדרוג חשבון</span></button>
         <div style="flex:1"></div>
         <button class="sidebar-btn" onclick="handleLogout()">🚪<span class="sidebar-tooltip">יציאה</span></button>
       </aside>
@@ -1487,6 +1608,74 @@ footer{
     <div class="confirm-btns">
       <button class="btn-confirm-yes" id="confirm-delete-btn" onclick="confirmDelete()">מחק</button>
       <button class="btn-confirm-no" onclick="closeConfirmModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- Question Editor Modal -->
+<div class="q-modal-overlay" id="q-editor-modal">
+  <div class="q-modal-box">
+    <div class="q-modal-title" id="q-modal-title">הוסף שאלה</div>
+    <div class="form-group">
+      <label class="form-label">שאלה / חידה</label>
+      <input type="text" class="form-input" id="q-text-input" placeholder="למשל: איזה כלי משמש לפתיחת מנעול?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">תשובות <span style="font-size:0.78rem;color:var(--text-muted)">(סמן ✓ על התשובה הנכונה)</span></label>
+      <div class="answers-editor" id="answers-editor"></div>
+      <button class="btn-add-answer" onclick="addAnswerRow()">+ הוסף תשובה</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">רמז (אופציונלי)</label>
+      <input type="text" class="form-input" id="q-hint-input" placeholder="רמז שיוצג אם שוחקן תקוע...">
+    </div>
+    <div class="q-modal-btns">
+      <button class="btn-q-cancel" onclick="closeQModal()">ביטול</button>
+      <button class="btn-q-save" onclick="saveQuestion()">שמור שאלה ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="upgrade-modal-overlay" id="upgrade-modal">
+  <div class="upgrade-modal-box">
+    <button class="modal-close" onclick="closeUpgradeModal()">✕</button>
+    <div style="font-size:2.5rem;margin-bottom:12px">⚡</div>
+    <div class="modal-title">שדרוג חשבון</div>
+    <div class="modal-sub" id="upgrade-modal-sub">בחר תוכנית להפעיל</div>
+    <div class="upgrade-plans" id="upgrade-plans-list"></div>
+    <button class="btn-submit" id="upgrade-confirm-btn" onclick="confirmUpgrade()">
+      <span class="btn-text">שדרג עכשיו 🚀</span>
+      <div class="btn-loader"></div>
+    </button>
+    <div style="font-size:0.78rem;color:var(--text-muted);margin-top:12px">זהו סביבת דמו — לא מחייב תשלום אמיתי</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     EDITOR PAGE
+═══════════════════════════════════════════ -->
+<div id="page-editor" class="page">
+  <div class="editor-page">
+    <div class="editor-header">
+      <button class="editor-back" onclick="showPage('dashboard')">← חזרה</button>
+      <div class="editor-project-title" id="editor-project-title">שם הפרויקט</div>
+      <div class="editor-type-badge" id="editor-type-badge">חדר בריחה</div>
+      <button class="btn-nav-primary" onclick="openShareModalFromEditor()">🔗 שתף</button>
+    </div>
+    <div class="editor-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div class="editor-section-title">שאלות וחידות</div>
+        <span style="font-size:0.82rem;color:var(--text-muted)" id="editor-q-count">0 שאלות</span>
+      </div>
+      <div class="questions-list" id="questions-list">
+        <div class="empty-questions">
+          <div class="eq-icon">🗺️</div>
+          <div style="font-weight:600;margin-bottom:6px">אין שאלות עדיין</div>
+          <div style="font-size:0.87rem">לחץ על "הוסף שאלה" כדי להתחיל לבנות את החדר</div>
+        </div>
+      </div>
+      <button class="btn-add-question" onclick="openQModal()">+ הוסף שאלה / חידה</button>
     </div>
   </div>
 </div>
@@ -2097,6 +2286,7 @@ function renderProjects() {
         <span>🔑 ${p.code}</span>
       </div>
       <div class="project-card-actions">
+        <button class="btn-action" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.25);color:var(--purple)" onclick="openEditor('${p.id}')">✏️ ערוך</button>
         <button class="btn-action btn-action-share" onclick="openShareModal('${p.id}')">🔗 שתף</button>
         <button class="btn-action btn-action-play" onclick="openLobbyForProject('${p.id}')">▶ לובי</button>
         <button class="btn-action btn-action-delete" onclick="promptDelete('${p.id}')">🗑️</button>
@@ -2609,6 +2799,245 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Handle URL params after auth is ready
 setTimeout(handleUrlParams, 1500);
+
+// ═══════════════════════════════════════════════════════
+//  EDITOR PAGE
+// ═══════════════════════════════════════════════════════
+const EditorState = {
+  projectId: null,
+  questions: [],
+  editingQIdx: null,  // null = new, number = editing existing
+  correctIdx: 0,
+};
+
+async function openEditor(projectId) {
+  const p = AppState.projects.find(x => x.id === projectId);
+  if(!p) return;
+  EditorState.projectId = projectId;
+  // Load fresh questions from Firebase
+  try {
+    const snap = await db.ref('projects/' + projectId).get();
+    if(snap.exists()){
+      const data = snap.val();
+      p.questions = data.questions || [];
+      p.questionCount = p.questions.length;
+    }
+  } catch(e) {}
+  EditorState.questions = p.questions ? [...p.questions] : [];
+  document.getElementById('editor-project-title').textContent = p.name;
+  document.getElementById('editor-type-badge').textContent = p.type === 'escape' ? '🗺️ חדר בריחה' : '📝 חידון';
+  renderQList();
+  showPage('editor');
+}
+
+function openShareModalFromEditor() {
+  openShareModal(EditorState.projectId);
+}
+
+function renderQList() {
+  const list = document.getElementById('questions-list');
+  const count = document.getElementById('editor-q-count');
+  const qs = EditorState.questions;
+  count.textContent = qs.length + ' שאלות';
+
+  if(qs.length === 0){
+    list.innerHTML = `<div class="empty-questions"><div class="eq-icon">🗺️</div><div style="font-weight:600;margin-bottom:6px">אין שאלות עדיין</div><div style="font-size:0.87rem">לחץ על "הוסף שאלה" כדי להתחיל לבנות את החדר</div></div>`;
+    return;
+  }
+
+  list.innerHTML = qs.map((q, i) => `
+    <div class="question-item">
+      <div class="question-num">${i+1}</div>
+      <div class="question-content">
+        <div class="question-text">${escHtml(q.text)}</div>
+        ${q.hint ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px">💡 ${escHtml(q.hint)}</div>` : ''}
+        <div class="question-answers">
+          ${(q.answers||[]).map((a,ai) => `<span class="answer-chip ${ai===q.correct?'correct':''}">${ai===q.correct?'✓ ':''}${escHtml(a)}</span>`).join('')}
+        </div>
+      </div>
+      <div class="question-actions">
+        <button class="btn-q-edit" onclick="openQModal(${i})">✏️</button>
+        <button class="btn-q-del" onclick="deleteQuestion(${i})">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openQModal(idx) {
+  EditorState.editingQIdx = (idx !== undefined) ? idx : null;
+  const isEdit = EditorState.editingQIdx !== null;
+  const q = isEdit ? EditorState.questions[idx] : null;
+
+  document.getElementById('q-modal-title').textContent = isEdit ? 'ערוך שאלה' : 'הוסף שאלה';
+  document.getElementById('q-text-input').value = q ? q.text : '';
+  document.getElementById('q-hint-input').value = q ? (q.hint||'') : '';
+  EditorState.correctIdx = q ? (q.correct||0) : 0;
+
+  const answers = q ? [...q.answers] : ['',''];
+  renderAnswerRows(answers);
+  document.getElementById('q-editor-modal').classList.add('active');
+  setTimeout(() => document.getElementById('q-text-input').focus(), 100);
+}
+
+function closeQModal() {
+  document.getElementById('q-editor-modal').classList.remove('active');
+}
+
+function renderAnswerRows(answers) {
+  const editor = document.getElementById('answers-editor');
+  editor.innerHTML = answers.map((a, i) => `
+    <div class="answer-row" data-idx="${i}">
+      <div class="answer-radio ${i===EditorState.correctIdx?'correct-mark':''}" onclick="setCorrect(${i})" title="סמן כתשובה נכונה"></div>
+      <input class="answer-input" value="${escHtml(a)}" placeholder="תשובה ${i+1}" oninput="answerInputChanged(this,${i})">
+      ${answers.length > 2 ? `<button class="btn-q-del" style="padding:4px 8px" onclick="removeAnswerRow(${i})">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function answerInputChanged(el, idx) {
+  // live update value - collected at save time
+}
+
+function setCorrect(idx) {
+  EditorState.correctIdx = idx;
+  const rows = document.querySelectorAll('#answers-editor .answer-radio');
+  rows.forEach((r,i) => {
+    r.classList.toggle('correct-mark', i===idx);
+  });
+}
+
+function addAnswerRow() {
+  const inputs = document.querySelectorAll('#answers-editor .answer-input');
+  if(inputs.length >= 6){ showToast('מקסימום 6 תשובות','warning'); return; }
+  const answers = Array.from(inputs).map(i=>i.value);
+  answers.push('');
+  renderAnswerRows(answers);
+}
+
+function removeAnswerRow(idx) {
+  const inputs = document.querySelectorAll('#answers-editor .answer-input');
+  const answers = Array.from(inputs).map(i=>i.value);
+  answers.splice(idx,1);
+  if(EditorState.correctIdx >= answers.length) EditorState.correctIdx = answers.length-1;
+  renderAnswerRows(answers);
+}
+
+async function saveQuestion() {
+  const text = document.getElementById('q-text-input').value.trim();
+  if(!text){ showToast('נא להזין טקסט שאלה','warning'); return; }
+  const inputs = document.querySelectorAll('#answers-editor .answer-input');
+  const answers = Array.from(inputs).map(i=>i.value.trim()).filter(Boolean);
+  if(answers.length < 2){ showToast('יש להזין לפחות 2 תשובות','warning'); return; }
+  const hint = document.getElementById('q-hint-input').value.trim();
+
+  const q = { text, answers, correct: Math.min(EditorState.correctIdx, answers.length-1), hint };
+
+  if(EditorState.editingQIdx !== null){
+    EditorState.questions[EditorState.editingQIdx] = q;
+  } else {
+    EditorState.questions.push(q);
+  }
+
+  // Save to Firebase
+  await saveQuestionsToFirebase();
+  renderQList();
+  closeQModal();
+  showToast(EditorState.editingQIdx !== null ? 'שאלה עודכנה ✓' : 'שאלה נוספה! 🎉','success');
+}
+
+function deleteQuestion(idx) {
+  EditorState.questions.splice(idx,1);
+  saveQuestionsToFirebase();
+  renderQList();
+  showToast('שאלה נמחקה','info');
+}
+
+async function saveQuestionsToFirebase() {
+  if(!db || !EditorState.projectId) return;
+  try {
+    await db.ref('projects/' + EditorState.projectId).update({
+      questions: EditorState.questions,
+      questionCount: EditorState.questions.length,
+    });
+    // Update local state
+    const p = AppState.projects.find(x=>x.id===EditorState.projectId);
+    if(p){ p.questions = EditorState.questions; p.questionCount = EditorState.questions.length; }
+  } catch(e) {
+    showToast('שגיאה בשמירה: ' + e.message,'error');
+  }
+}
+
+// close q modal on outside click
+document.getElementById('q-editor-modal').addEventListener('click', function(e){ if(e.target===this) closeQModal(); });
+
+// ═══════════════════════════════════════════════════════
+//  UPGRADE / PRICING
+// ═══════════════════════════════════════════════════════
+const PLANS = {
+  free:     { label:'רגיל',  price:'$0/חודש',    emoji:'🆓' },
+  pro:      { label:'פרו',   price:'$7.99/חודש', emoji:'⚡' },
+  ultra:    { label:'אולטרה',price:'$13.99/חודש',emoji:'💎' },
+  business: { label:'עסקי', price:'$17.99/חודש', emoji:'👑' },
+};
+
+let _selectedUpgradePlan = 'pro';
+
+function handlePricingClick(plan) {
+  if(!AppState.currentUser){ showPage('auth'); return; }
+  openUpgradeModal(plan);
+}
+
+function openUpgradeModal(preselect) {
+  if(!AppState.currentUser){ showPage('auth'); return; }
+  _selectedUpgradePlan = preselect || 'pro';
+  const current = AppState.userProfile?.accountType || 'free';
+  document.getElementById('upgrade-modal-sub').textContent =
+    `תוכנית נוכחית: ${PLANS[current]?.label || current}`;
+
+  const list = document.getElementById('upgrade-plans-list');
+  list.innerHTML = Object.entries(PLANS).map(([key,plan]) => `
+    <div class="upgrade-plan plan-${key} ${key===_selectedUpgradePlan?'selected':''}" onclick="selectUpgradePlan('${key}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.3rem">${plan.emoji}</span>
+        <span class="upgrade-plan-name">${plan.label}</span>
+        ${key===current?`<span class="upgrade-current-badge">נוכחי</span>`:''}
+      </div>
+      <span class="upgrade-plan-price">${plan.price}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('upgrade-modal').classList.add('active');
+}
+
+function selectUpgradePlan(plan) {
+  _selectedUpgradePlan = plan;
+  document.querySelectorAll('#upgrade-plans-list .upgrade-plan').forEach(el => {
+    el.classList.toggle('selected', el.classList.contains('plan-'+plan));
+  });
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('active');
+}
+
+async function confirmUpgrade() {
+  if(!AppState.currentUser || !db) return;
+  const plan = _selectedUpgradePlan;
+  setLoading('upgrade-confirm-btn', true);
+  try {
+    await db.ref('users/' + AppState.currentUser.uid).update({ accountType: plan });
+    AppState.userProfile = { ...AppState.userProfile, accountType: plan };
+    setLoading('upgrade-confirm-btn', false);
+    closeUpgradeModal();
+    const planLabel = PLANS[plan]?.label || plan;
+    showToast(`חשבונך שודרג לתוכנית ${planLabel}! 🎉`, 'success', 4000);
+  } catch(e) {
+    setLoading('upgrade-confirm-btn', false);
+    showToast('שגיאה: ' + e.message, 'error');
+  }
+}
+
+document.getElementById('upgrade-modal').addEventListener('click', function(e){ if(e.target===this) closeUpgradeModal(); });
 </script>
 </body>
 </html>
